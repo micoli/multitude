@@ -138,4 +138,27 @@ class SetTest extends TestCase
         self::expectException(EmptySetException::class);
         $set->last();
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractSet> $className
+     */
+    public function it_should_map_values(string $className): void
+    {
+        /** @var AbstractSet<mixed> $set */
+        $set = $className::fromArray(['a', 'b', 3, 0, null, 'last']);
+        $newSet = $set->map(fn (mixed $value, mixed $key): string => sprintf('%s=>%s', $key, json_encode($value)));
+        self::assertInstanceOf($className, $newSet);
+        self::assertSame([
+            '0=>"a"',
+            '1=>"b"',
+            '2=>3',
+            '3=>0',
+            '4=>null',
+            '5=>"last"',
+        ], $newSet->toArray());
+    }
 }

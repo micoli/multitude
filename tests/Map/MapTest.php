@@ -205,4 +205,24 @@ class MapTest extends TestCase
         self::expectException(EmptySetException::class);
         $map->last();
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap> $className
+     */
+    public function it_should_map_values(string $className): void
+    {
+        /** @var AbstractMap<mixed,mixed> $map */
+        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $newMap = $map->map(fn (mixed $value, mixed $key): string => sprintf('%s=>%s', $key, $value));
+        self::assertInstanceOf($className, $newMap);
+        self::assertSame([
+            'a' => 'a=>1',
+            'b' => 'b=>3',
+            3 => '3=>3 as int',
+        ], $newMap->toArray());
+    }
 }

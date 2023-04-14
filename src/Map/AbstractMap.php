@@ -312,4 +312,24 @@ class AbstractMap implements Countable, IteratorAggregate, ArrayAccess
 
         return null;
     }
+
+    /**
+     * @template TResult
+     *
+     * @param callable(TValue, TKey):TResult $callable
+     *
+     * @return static<TKey, TResult>
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function map(callable $callable): static
+    {
+        /** @var static<TKey, TResult> $instance */
+        $instance = $this->getInstance();
+        foreach ($instance->tuples as $index => [$key, $value]) {
+            $instance->tuples[$index] = [$key, $callable($value, $key)];
+        }
+
+        return $instance;
+    }
 }

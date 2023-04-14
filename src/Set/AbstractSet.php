@@ -219,4 +219,22 @@ class AbstractSet implements Countable, IteratorAggregate
 
         return null;
     }
+
+    /**
+     * @template TResult
+     *
+     * @param callable(TValue, int):TResult $callable
+     *
+     * @return static<TResult>
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function map(callable $callable): static
+    {
+        /** @var static<TResult> $instance */
+        $instance = $this->getInstance();
+        $instance->values = array_map(fn (mixed $value, mixed $key) => $callable($value, $key), $instance->values, array_keys($instance->values));
+
+        return $instance;
+    }
 }
