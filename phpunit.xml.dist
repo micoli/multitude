@@ -4,6 +4,7 @@
          bootstrap="tests/bootstrap.php"
          executionOrder="depends,defects"
          beStrictAboutOutputDuringTests="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
          failOnRisky="true"
          failOnWarning="true"
 >
