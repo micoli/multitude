@@ -161,4 +161,50 @@ class SetTest extends TestCase
             '5=>"last"',
         ], $newSet->toArray());
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractSet> $className
+     */
+    public function it_should_reduce_values(string $className): void
+    {
+        /** @var AbstractSet<mixed> $map */
+        $set = $className::fromArray(['a', 'b', 3, 0, null, 'last']);
+        $result = $set->reduce(function (array $accumulator, mixed $value, mixed $index): array {
+            $accumulator[] = [$index, $value];
+
+            return $accumulator;
+        }, [[-1, 'initial']]);
+        self::assertSame([
+            [-1, 'initial'],
+            [0, 'a'],
+            [1, 'b'],
+            [2, 3],
+            [3, 0],
+            [4, null],
+            [5, 'last'],
+        ], $result);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractSet> $className
+     */
+    public function it_should_reduce_to_a_single_value(string $className): void
+    {
+        /** @var AbstractSet<mixed> $set */
+        $set = $className::fromArray([1 => 1, 2 => 2, 3 => 3]);
+        $result = $set->reduce(function (int $accumulator, mixed $value, mixed $index): int {
+            $accumulator += $value * ($index + 1);
+
+            return $accumulator;
+        }, 0);
+        self::assertSame(14, $result);
+    }
 }

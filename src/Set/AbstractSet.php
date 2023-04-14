@@ -237,4 +237,24 @@ class AbstractSet implements Countable, IteratorAggregate
 
         return $instance;
     }
+
+    /**
+     * @template TResult
+     * @template TAccumulator
+     *
+     * @param callable(TAccumulator, TValue, int):TAccumulator $callable
+     * @param TAccumulator $accumulator
+     *
+     * @return TAccumulator
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function reduce(callable $callable, mixed $accumulator): mixed
+    {
+        foreach ($this->values as $index => $value) {
+            $accumulator = $callable($accumulator, $value, $index);
+        }
+
+        return $accumulator;
+    }
 }

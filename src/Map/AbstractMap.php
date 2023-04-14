@@ -332,4 +332,24 @@ class AbstractMap implements Countable, IteratorAggregate, ArrayAccess
 
         return $instance;
     }
+
+    /**
+     * @template TResult
+     * @template TAccumulator
+     *
+     * @param callable(TAccumulator, TValue, TKey):TAccumulator $callable
+     * @param TAccumulator $accumulator
+     *
+     * @return TAccumulator
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function reduce(callable $callable, mixed $accumulator): mixed
+    {
+        foreach ($this->tuples as [$key, $value]) {
+            $accumulator = $callable($accumulator, $value, $key);
+        }
+
+        return $accumulator;
+    }
 }

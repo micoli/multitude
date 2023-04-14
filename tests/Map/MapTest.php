@@ -225,4 +225,47 @@ class MapTest extends TestCase
             3 => '3=>3 as int',
         ], $newMap->toArray());
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap> $className
+     */
+    public function it_should_reduce_values(string $className): void
+    {
+        /** @var AbstractMap<mixed,mixed> $map */
+        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $result = $map->reduce(function (array $accumulator, mixed $value, mixed $key): array {
+            $accumulator[] = [$value, $key];
+
+            return $accumulator;
+        }, [[-1, 'initial']]);
+        self::assertSame([
+            [-1, 'initial'],
+            [1, 'a'],
+            [3, 'b'],
+            ['3 as int', 3],
+        ], $result);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap> $className
+     */
+    public function it_should_reduce_to_a_single_value(string $className): void
+    {
+        /** @var AbstractMap<mixed,mixed> $map */
+        $map = $className::fromArray([1 => 1, 2 => 2, 3 => 3]);
+        $result = $map->reduce(function (int $accumulator, mixed $value, mixed $key): int {
+            $accumulator += $value * $key;
+
+            return $accumulator;
+        }, 0);
+        self::assertSame(14, $result);
+    }
 }
