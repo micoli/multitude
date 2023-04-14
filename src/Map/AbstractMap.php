@@ -8,6 +8,7 @@ use ArrayAccess;
 use Countable;
 use Generator;
 use IteratorAggregate;
+use Micoli\Multitude\AbstractMultitude;
 use Micoli\Multitude\Exception\EmptySetException;
 use Micoli\Multitude\Exception\InvalidArgumentException;
 use Micoli\Multitude\Exception\LogicException;
@@ -23,7 +24,7 @@ use Traversable;
  * @implements IteratorAggregate<TKey, TValue>
  * @implements ArrayAccess<TKey, TValue>
  */
-class AbstractMap implements Countable, IteratorAggregate, ArrayAccess
+class AbstractMap extends AbstractMultitude implements Countable, IteratorAggregate, ArrayAccess
 {
     /**
      * @var list<array{TKey, TValue}>
@@ -381,5 +382,17 @@ class AbstractMap implements Countable, IteratorAggregate, ArrayAccess
         }
 
         return $instance;
+    }
+
+    /**
+     * @return static<TKey, TValue>
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function slice(int $offset, ?int $length = null): static
+    {
+        $max = $this->getSliceMax(count($this->tuples), $offset, $length);
+
+        return $this->filter(fn (mixed $value, mixed $key, int $index) => $index >= $offset && $index <= $max);
     }
 }

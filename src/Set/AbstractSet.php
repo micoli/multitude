@@ -7,6 +7,7 @@ namespace Micoli\Multitude\Set;
 use Countable;
 use Generator;
 use IteratorAggregate;
+use Micoli\Multitude\AbstractMultitude;
 use Micoli\Multitude\Exception\EmptySetException;
 use Micoli\Multitude\Exception\LogicException;
 use Micoli\Multitude\Exception\NotFoundException;
@@ -20,7 +21,7 @@ use Traversable;
  *
  * @implements IteratorAggregate<int, TValue>
  */
-class AbstractSet implements Countable, IteratorAggregate
+class AbstractSet extends AbstractMultitude implements Countable, IteratorAggregate
 {
     /**
      * @var list<TValue>
@@ -262,8 +263,6 @@ class AbstractSet implements Countable, IteratorAggregate
      * @param callable(TValue, int):bool $callable
      *
      * @return static<TValue>
-     *
-     * @psalm-suppress  InvalidArgument
      */
     public function filter(callable $callable): static
     {
@@ -281,5 +280,15 @@ class AbstractSet implements Countable, IteratorAggregate
         }
 
         return $instance;
+    }
+
+    /**
+     * @return static<TValue>
+     */
+    public function slice(int $offset, ?int $length = null): static
+    {
+        $max = $this->getSliceMax(count($this->values), $offset, $length);
+
+        return $this->filter(fn (mixed $value, int $index) => $index >= $offset && $index <= $max);
     }
 }

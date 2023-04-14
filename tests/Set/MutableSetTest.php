@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Micoli\Multitude\Tests\Set;
 
 use LogicException;
+use Micoli\Multitude\Exception\InvalidArgumentException;
 use Micoli\Multitude\Set\MutableSet;
 use Micoli\Multitude\Tests\Fixtures\Baz;
 use PHPUnit\Framework\TestCase;
@@ -84,9 +85,27 @@ class MutableSetTest extends TestCase
      */
     public function it_should_filter_map(): void
     {
-        /** @var MutableSet<mixed> $map */
-        $map = MutableSet::fromArray(['a', 'b', 3, 0, null]);
-        $map->filter(fn (mixed $value, mixed $index): bool => $index === 0 || $value === 'b');
-        self::assertSame(['a', 'b'], $map->toArray());
+        /** @var MutableSet<mixed> $set */
+        $set = MutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $set->filter(fn (mixed $value, mixed $index): bool => $index === 0 || $value === 'b');
+        self::assertSame(['a', 'b'], $set->toArray());
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_slice_set(): void
+    {
+        /** @var MutableSet< mixed> $set */
+        $set = MutableSet::fromArray(['a', 'b', 3, 0, null, 6, '8']);
+        $set->slice(1, 3);
+        self::assertSame(['b', 3, 0, null], $set->toArray());
+
+        $set = MutableSet::fromArray(['a', 'b', 3, 0, null, 6, '8']);
+        $set->slice(1);
+        self::assertSame(['b', 3, 0, null, 6, '8'], $set->toArray());
+
+        self::expectException(InvalidArgumentException::class);
+        $set->slice(1, -1);
     }
 }

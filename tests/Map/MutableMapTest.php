@@ -114,4 +114,23 @@ class MutableMapTest extends TestCase
         self::assertInstanceOf(MutableMap::class, $map);
         self::assertSame([[1, 1], ['3', '3']], $map->getTuples());
     }
+
+    /**
+     * @test
+     */
+    public function it_should_slice_map(): void
+    {
+        /** @var MutableMap<mixed,mixed> $map */
+        $map = MutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map->slice(1, 2);
+        self::assertSame([[2, 2], [3, 3], ['3', '3']], $map->getTuples());
+
+        /** @var MutableMap<mixed,mixed> $map */
+        $map = MutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map->slice(1);
+        self::assertSame([[2, 2], [3, 3], ['3', '3'], ['4', '4']], $map->getTuples());
+
+        self::expectException(InvalidArgumentException::class);
+        $map->slice(1, -1);
+    }
 }

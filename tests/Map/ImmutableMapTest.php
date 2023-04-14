@@ -106,7 +106,7 @@ class ImmutableMapTest extends TestCase
     /**
      * @test
      */
-    public function it_should_filter_set(): void
+    public function it_should_filter_map(): void
     {
         /** @var ImmutableMap<mixed,mixed> $map */
         $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3']]);
@@ -114,5 +114,25 @@ class ImmutableMapTest extends TestCase
         self::assertInstanceOf(ImmutableMap::class, $newMap);
         self::assertSame([[1, 1], [2, 2], [3, 3], ['3', '3']], $map->getTuples());
         self::assertSame([[1, 1], ['3', '3']], $newMap->getTuples());
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_slice_map(): void
+    {
+        /** @var ImmutableMap<mixed,mixed> $map */
+        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $newMap = $map->slice(1, 2);
+        self::assertInstanceOf(ImmutableMap::class, $newMap);
+        self::assertSame([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']], $map->getTuples());
+        self::assertSame([[2, 2], [3, 3], ['3', '3']], $newMap->getTuples());
+
+        $newMap2 = $map->slice(1);
+        self::assertInstanceOf(ImmutableMap::class, $newMap2);
+        self::assertSame([[2, 2], [3, 3], ['3', '3'], ['4', '4']], $newMap2->getTuples());
+
+        self::expectException(InvalidArgumentException::class);
+        $map->slice(1, -1);
     }
 }
