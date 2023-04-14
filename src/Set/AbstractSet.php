@@ -257,4 +257,29 @@ class AbstractSet implements Countable, IteratorAggregate
 
         return $accumulator;
     }
+
+    /**
+     * @param callable(TValue, int):bool $callable
+     *
+     * @return static<TValue>
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function filter(callable $callable): static
+    {
+        /** @var static<TValue> $instance */
+        $instance = $this->getInstance();
+        $values = $this->values;
+
+        /** @var list<TValue> $instance->values */
+        $instance->values = [];
+        foreach ($values as $index => $value) {
+            if (!$callable($value, $index)) {
+                continue;
+            }
+            $instance->values[] = $value;
+        }
+
+        return $instance;
+    }
 }

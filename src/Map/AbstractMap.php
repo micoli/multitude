@@ -78,6 +78,11 @@ class AbstractMap implements Countable, IteratorAggregate, ArrayAccess
         return new static($values);
     }
 
+    public function getTuples(): array
+    {
+        return $this->tuples;
+    }
+
     public function count(): int
     {
         return count($this->tuples);
@@ -351,5 +356,30 @@ class AbstractMap implements Countable, IteratorAggregate, ArrayAccess
         }
 
         return $accumulator;
+    }
+
+    /**
+     * @param callable(TValue, TKey, int):bool $callable
+     *
+     * @return static<TKey, TValue>
+     *
+     * @psalm-suppress  InvalidArgument
+     */
+    public function filter(callable $callable): static
+    {
+        /** @var static<TKey, TValue> $instance */
+        $instance = $this->getInstance();
+        $tuples = $this->tuples;
+
+        /** @var list<array{TKey, TValue}> $this->tuples */
+        $instance->tuples = [];
+        foreach ($tuples as $index => [$key, $value]) {
+            if (!$callable($value, $key, $index)) {
+                continue;
+            }
+            $instance->tuples[] = [$key, $value];
+        }
+
+        return $instance;
     }
 }

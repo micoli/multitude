@@ -102,4 +102,16 @@ class MutableMapTest extends TestCase
         self::assertInstanceOf(ImmutableMap::class, $newMap);
         self::assertSame($map->toArray(), $newMap->toArray());
     }
+
+    /**
+     * @test
+     */
+    public function it_should_filter_map(): void
+    {
+        /** @var MutableMap<mixed,mixed> $map */
+        $map = MutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3']]);
+        $map->filter(fn (mixed $value, mixed $key): bool => $key === 1 || $value === '3');
+        self::assertInstanceOf(MutableMap::class, $map);
+        self::assertSame([[1, 1], ['3', '3']], $map->getTuples());
+    }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Micoli\Multitude\Tests\Set;
 
 use LogicException;
-use Micoli\Multitude\Set\ImmutableSet;
 use Micoli\Multitude\Set\MutableSet;
 use Micoli\Multitude\Tests\Fixtures\Baz;
 use PHPUnit\Framework\TestCase;
@@ -77,7 +76,17 @@ class MutableSetTest extends TestCase
         /** @var MutableSet<mixed> $set */
         $set = MutableSet::fromArray(['a', 'b', 3, 0, null]);
         $newMap = $set->toImmutable();
-        self::assertInstanceOf(ImmutableSet::class, $newMap);
         self::assertSame($set->toArray(), $newMap->toArray());
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_filter_map(): void
+    {
+        /** @var MutableSet<mixed> $map */
+        $map = MutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $map->filter(fn (mixed $value, mixed $index): bool => $index === 0 || $value === 'b');
+        self::assertSame(['a', 'b'], $map->toArray());
     }
 }

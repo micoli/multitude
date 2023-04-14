@@ -77,4 +77,17 @@ class ImmutableSetTest extends TestCase
         self::assertInstanceOf(MutableSet::class, $newMap);
         self::assertSame($set->toArray(), $newMap->toArray());
     }
+
+    /**
+     * @test
+     */
+    public function it_should_filter_map(): void
+    {
+        /** @var ImmutableSet<mixed> $map */
+        $map = ImmutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $newMap = $map->filter(fn (mixed $value, mixed $index): bool => $index === 0 || $value === 'b');
+        self::assertInstanceOf(ImmutableSet::class, $newMap);
+        self::assertSame(['a', 'b', 3, 0, null], $map->toArray());
+        self::assertSame(['a', 'b'], $newMap->toArray());
+    }
 }
