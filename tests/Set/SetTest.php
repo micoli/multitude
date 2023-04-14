@@ -207,4 +207,25 @@ class SetTest extends TestCase
         }, 0);
         self::assertSame(14, $result);
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractSet> $className
+     */
+    public function it_should_use_foreach(string $className): void
+    {
+        /** @var AbstractSet<mixed> $set */
+        $set = $className::fromArray([1, 3, 2, 4]);
+        $result = '';
+        $newSet = $set->foreach(function (mixed $value, int $index) use (&$result): bool {
+            $result = sprintf('%s,%s=>%s', $result, $value, $index);
+
+            return $value !== 2;
+        });
+        self::assertInstanceOf($className, $newSet);
+        self::assertSame(',1=>0,3=>1,2=>2', $result);
+    }
 }

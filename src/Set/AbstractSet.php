@@ -291,4 +291,20 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
 
         return $this->filter(fn (mixed $value, int $index) => $index >= $offset && $index <= $max);
     }
+
+    /**
+     * @param callable(TValue, int):bool $callable
+     *
+     * @return static<TValue>
+     */
+    public function forEach(callable $callable): static
+    {
+        foreach ($this->values as $index => $value) {
+            if (!$callable($value, $index)) {
+                return $this;
+            }
+        }
+
+        return $this;
+    }
 }

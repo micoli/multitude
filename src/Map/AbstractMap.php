@@ -395,4 +395,20 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
 
         return $this->filter(fn (mixed $value, mixed $key, int $index) => $index >= $offset && $index <= $max);
     }
+
+    /**
+     * @param callable(TValue, TKey, int):bool $callable
+     *
+     * @return static<TKey, TValue>
+     */
+    public function forEach(callable $callable): static
+    {
+        foreach ($this->tuples as $index => [$key, $value]) {
+            if (!$callable($value, $key, $index)) {
+                return $this;
+            }
+        }
+
+        return $this;
+    }
 }

@@ -268,4 +268,25 @@ class MapTest extends TestCase
         }, 0);
         self::assertSame(14, $result);
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap> $className
+     */
+    public function it_should_use_foreach(string $className): void
+    {
+        /** @var AbstractMap<mixed,mixed> $map */
+        $map = $className::fromArray([1 => 1, 2 => 2, 3 => 3]);
+        $result = '';
+        $newMap = $map->foreach(function (mixed $value, mixed $key, int $index) use (&$result): bool {
+            $result = sprintf('%s,%s=>%s', $result, $value, $key);
+
+            return $value !== 3;
+        });
+        self::assertInstanceOf($className, $newMap);
+        self::assertSame(',1=>1,2=>2,3=>3', $result);
+    }
 }
