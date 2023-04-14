@@ -103,7 +103,7 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     {
         $instance = $this->getInstance();
         $found = false;
-        for ($index = count($instance->values); $index >= 0; --$index) {
+        for ($index = count($instance->values) - 1; $index >= 0; --$index) {
             if ($instance->values[$index] === $searchedValue) {
                 unset($instance->values[$index]);
                 $found = true;

@@ -1,5 +1,5 @@
 test-unit:
-	vendor/bin/phpunit --testdox
+	vendor/bin/phpunit
 test-static:
 	vendor/bin/psalm
 test-coding-standard:

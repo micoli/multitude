@@ -143,7 +143,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function removeValue(mixed $searchedValue): static
     {
         $instance = $this->getInstance();
-        for ($index = count($instance->tuples); $index >= 0; --$index) {
+        for ($index = count($instance->tuples) - 1; $index >= 0; --$index) {
             if ($instance->tuples[$index][1] === $searchedValue) {
                 unset($instance->tuples[$index]);
             }
