@@ -131,7 +131,26 @@ class ImmutableMapTest extends TestCase
         $newMap2 = $map->slice(1);
         self::assertInstanceOf(ImmutableMap::class, $newMap2);
         self::assertSame([[2, 2], [3, 3], ['3', '3'], ['4', '4']], $newMap2->getTuples());
+    }
 
+    /**
+     * @test
+     */
+    public function it_should_not_slice_map_with_invalid_offset(): void
+    {
+        /** @var ImmutableMap<mixed,mixed> $map */
+        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        self::expectException(InvalidArgumentException::class);
+        $map->slice(-1, 2);
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_not_slice_map_with_invalid_length(): void
+    {
+        /** @var ImmutableMap<mixed,mixed> $map */
+        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
         self::expectException(InvalidArgumentException::class);
         $map->slice(1, -1);
     }

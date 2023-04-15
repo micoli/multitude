@@ -31,6 +31,8 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
 
     /**
      * @param list<TValue> $values
+     *
+     * @codeCoverageIgnore
      */
     protected function __construct(array $values = [])
     {

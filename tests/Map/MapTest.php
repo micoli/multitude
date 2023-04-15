@@ -104,8 +104,27 @@ class MapTest extends TestCase
         $map = $className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
         self::assertSame('3 as int', $map[3]);
         self::assertSame('3 as string', $map['3']);
+        if ($className === MutableMap::class) {
+            $map['toto'] = 123;
+            self::assertSame(123, $map['toto']);
+            self::assertArrayHasKey('toto', $map);
+            self::assertArrayNotHasKey('tata', $map);
+        }
         self::expectException(OutOfBoundsException::class);
         self::assertSame('3 as string', $map['unknown']);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap> $className
+     */
+    public function it_should_be_tested_as_empty(string $className): void
+    {
+        self::assertTrue($className::fromTuples([])->isEmpty());
+        self::assertFalse($className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']])->isEmpty());
     }
 
     /**
@@ -140,6 +159,25 @@ class MapTest extends TestCase
             $keyList .= $k . ',';
         }
         self::assertSame('a,b,3,3,', $keyList);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap> $className
+     */
+    public function it_should_update_by_key(string $className): void
+    {
+        /** @var MutableMap<mixed,mixed> $map */
+        $map = $className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
+        $newMap = $map->set('a', 111);
+        $keyList = '';
+        foreach ($newMap->values() as $k) {
+            $keyList .= $k . ',';
+        }
+        self::assertSame('111,3,3 as int,3 as string,', $keyList);
     }
 
     /**

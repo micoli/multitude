@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Micoli\Multitude\Tests\Set;
 
 use Micoli\Multitude\Exception\EmptySetException;
+use Micoli\Multitude\Exception\ValueAlreadyPresentException;
 use Micoli\Multitude\Set\AbstractSet;
 use Micoli\Multitude\Set\ImmutableSet;
 use Micoli\Multitude\Set\MutableSet;
@@ -36,6 +37,30 @@ class SetTest extends TestCase
         self::assertSame([0, 1, 2], iterator_to_array($set->keys()));
         self::assertCount(3, $set);
         self::assertSame(3, $set->get(1));
+        self::assertSame(666, $set->get(80, 666));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractSet> $className
+     */
+    public function it_should_be_appended(string $className): void
+    {
+        /** @var AbstractSet<mixed> $set */
+        $set = $className::fromArray([1, 3, 4 => 'a']);
+        self::assertSame([1, 3, 'a', 'b'], $set->append('b')->toArray());
+
+        /** @var AbstractSet<mixed> $set2 */
+        $set2 = $className::fromArray([1, 3, 4 => 'a']);
+        self::assertSame([1, 3, 'a', 'b'], $set2->append('b')->append('b', false)->toArray());
+
+        /** @var AbstractSet<mixed> $set3 */
+        $set3 = $className::fromArray([1, 3, 4 => 'a']);
+        self::expectException(ValueAlreadyPresentException::class);
+        self::assertSame([1, 3, 'a', 'b'], $set3->append('b')->append('b')->toArray());
     }
 
     /**
@@ -50,6 +75,19 @@ class SetTest extends TestCase
         /** @var ImmutableSet<mixed> $set */
         $set = $className::fromArray(['a', 'b', 3, 0, null]);
         self::assertCount(5, $set);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractSet> $className
+     */
+    public function it_should_be_empty(string $className): void
+    {
+        self::assertTrue($className::fromArray([])->isEmpty());
+        self::assertFalse($className::fromArray([1])->isEmpty());
     }
 
     /**
@@ -228,5 +266,13 @@ class SetTest extends TestCase
         });
         self::assertInstanceOf($className, $newSet);
         self::assertSame(',1=>0,3=>1,2=>2', $result);
+
+        $result = '';
+        $set->foreach(function (mixed $value, int $index) use (&$result): bool {
+            $result = sprintf('%s,%s=>%s', $result, $value, $index);
+
+            return true;
+        });
+        self::assertSame(',1=>0,3=>1,2=>2,4=>3', $result);
     }
 }

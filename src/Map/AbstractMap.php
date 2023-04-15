@@ -34,6 +34,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
 
     /**
      * @param list<array{TKey, TValue}> $tuples
+     *
+     * @codeCoverageIgnore
      */
     protected function __construct(array $tuples = [])
     {
