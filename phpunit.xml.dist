@@ -5,6 +5,9 @@
          executionOrder="depends,defects"
          beStrictAboutOutputDuringTests="true"
          displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
          failOnRisky="true"
          failOnWarning="true"
 >

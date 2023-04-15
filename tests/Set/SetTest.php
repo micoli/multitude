@@ -35,6 +35,7 @@ class SetTest extends TestCase
         self::assertSame([1, 3, 'a'], $set->toArray());
         self::assertSame([0, 1, 2], iterator_to_array($set->keys()));
         self::assertCount(3, $set);
+        self::assertSame(3, $set->get(1));
     }
 
     /**

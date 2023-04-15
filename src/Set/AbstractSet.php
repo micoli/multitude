@@ -45,6 +45,8 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return a new instance from an array. dedup values on construction
+     *
      * @template TV
      *
      * @param iterable<TV> $values
@@ -64,6 +66,9 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
         return new static($buffer);
     }
 
+    /**
+     * return the number of items in the set
+     */
     public function count(): int
     {
         return count($this->values);
@@ -75,6 +80,10 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Append a value at the end of the set
+     *
+     * Throw a ValueAlreadyPresentException if value is already present in the set and $throw==true
+     *
      * @param TValue $newValue
      *
      * @return static<TValue>
@@ -97,6 +106,10 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Remove a value in the set
+     *
+     * Throw a NotFoundException if value is not found and $throw==true
+     *
      * @param TValue $searchedValue
      */
     public function remove(mixed $searchedValue, bool $throw = true): static
@@ -140,6 +153,8 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return if a set contains a value
+     *
      * @param TValue $searchedValue
      */
     public function hasValue(mixed $searchedValue): bool
@@ -147,11 +162,17 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
         return $this->indexOf($searchedValue) >= 0;
     }
 
+    /**
+     * Return if a set is empty
+     */
     public function isEmpty(): bool
     {
         return count($this->values) === 0;
     }
 
+    /**
+     * Return an iterator for values
+     */
     public function getIterator(): Traversable
     {
         foreach ($this->values as $value) {
@@ -160,6 +181,8 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return an array representing the values
+     *
      * @return list<TValue>
      */
     public function toArray(): array
@@ -168,6 +191,27 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return a value in the set by index
+     *
+     * if index is not found, default value is returned
+     *
+     * @param int $index
+     * @param ?TValue $defaultValue
+     *
+     * @return TValue
+     */
+    public function get(mixed $index, mixed $defaultValue = null): mixed
+    {
+        if (array_key_exists($index, $this->values)) {
+            return $this->values[$index];
+        }
+
+        return $defaultValue;
+    }
+
+    /**
+     * Return an iterator of keys
+     *
      * @return Generator<int>
      */
     public function keys(): Generator
@@ -178,6 +222,8 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return an iterator of values
+     *
      * @return Generator<TValue>
      */
     public function values(): Generator
@@ -188,6 +234,10 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return the first value in the set
+     *
+     * EmptySetException is thrown if set is empty and $throw === true
+     *
      * @return TValue
      */
     public function first(bool $throw = true): mixed
@@ -205,6 +255,10 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return the latest value in the set
+     *
+     * EmptySetException is thrown if set is empty and $throw === true
+     *
      * @return TValue
      */
     public function last(bool $throw = true): mixed
@@ -222,6 +276,9 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Applies the callback to the values, keys are preserved
+     * Callback receive `$value` and `$index`
+     *
      * @template TResult
      *
      * @param callable(TValue, int):TResult $callable
@@ -234,12 +291,20 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     {
         /** @var static<TResult> $instance */
         $instance = $this->getInstance();
-        $instance->values = array_map(fn (mixed $value, mixed $key) => $callable($value, $key), $instance->values, array_keys($instance->values));
+        $instance->values = array_map(
+            /** @return TResult */
+            fn (mixed $value, mixed $key): mixed => $callable($value, $key),
+            $instance->values,
+            array_keys($instance->values),
+        );
 
         return $instance;
     }
 
     /**
+     * Iteratively reduce the Set to a single value using a callback function
+     * Callback receive `$accumulator`,`$value` and `$index`
+     *
      * @template TResult
      * @template TAccumulator
      *
@@ -260,6 +325,10 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Filter the set using a callback function
+     *
+     * Callback receive `$value` and `$index`
+     *
      * @param callable(TValue, int):bool $callable
      *
      * @return static<TValue>
@@ -283,6 +352,8 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Extract a slice of the set
+     *
      * @return static<TValue>
      */
     public function slice(int $offset, ?int $length = null): static
@@ -293,6 +364,9 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Apply a callback on set values
+     * Callback receive `$value` and `$index`
+     *
      * @param callable(TValue, int):bool $callable
      *
      * @return static<TValue>

@@ -48,6 +48,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return a new instance from an array.
+     *
      * @template TK
      * @template TV
      *
@@ -66,6 +68,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return a new instance from an array of [$key,$value]. $keys types are preserved
+     *
      * @template TK
      * @template TV
      *
@@ -84,6 +88,9 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
         return $this->tuples;
     }
 
+    /**
+     * Return the number of items in the map
+     */
     public function count(): int
     {
         return count($this->tuples);
@@ -100,6 +107,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Add or replace a value in the map
+     *
      * @param TKey $newKey
      * @param TValue $newValue
      *
@@ -124,6 +133,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Remove a value in the map by key
+     *
      * @param TKey $searchedKey
      */
     public function removeKey(mixed $searchedKey): static
@@ -138,6 +149,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Remove a value in the map by value
+     *
      * @param TValue $searchedValue
      */
     public function removeValue(mixed $searchedValue): static
@@ -170,6 +183,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return if a map contains a specific key
+     *
      * @param TKey $searchedKey
      */
     public function hasKey(mixed $searchedKey): bool
@@ -177,11 +192,17 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
         return $this->keyIndex($searchedKey) >= 0;
     }
 
+    /**
+     * Return if a map is empty
+     */
     public function isEmpty(): bool
     {
         return count($this->tuples) === 0;
     }
 
+    /**
+     * Return an iterator for values by keys
+     */
     public function getIterator(): Traversable
     {
         foreach ($this->tuples as [$key, $value]) {
@@ -190,6 +211,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return an array representing the values
+     *
      * @return array<TKey, TValue>
      */
     public function toArray(): array
@@ -198,6 +221,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return a value in the map by index
+     *
+     * if index is not found, default value is returned
+     *
      * @param TKey $searchedKey
      * @param ?TValue $defaultValue
      *
@@ -266,6 +293,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return an iterator of keys
+     *
      * @return Generator<TKey>
      */
     public function keys(): Generator
@@ -276,6 +305,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return an iterator of values
+     *
      * @return Generator<TValue>
      */
     public function values(): Generator
@@ -286,6 +317,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return the first value in the map
+     *
+     * EmptySetException is thrown if map is empty and $throw === true
+     *
      * @return TValue
      */
     public function first(bool $throw = true): mixed
@@ -303,6 +338,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return the latest value in the map
+     *
+     * EmptySetException is thrown if map is empty and $throw === true
+     *
      * @return TValue
      */
     public function last(bool $throw = true): mixed
@@ -320,6 +359,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Applies the callback to the values, keys are preserved
+     *
+     * Callback receive `$value` and `$index`
+     *
      * @template TResult
      *
      * @param callable(TValue, TKey):TResult $callable
@@ -340,6 +383,9 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Iteratively reduce the Map to a single value using a callback function
+     * Callback receive `$accumulator`,`$value` and `$key`
+     *
      * @template TResult
      * @template TAccumulator
      *
@@ -360,6 +406,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Filter the map using a callback function
+     *
+     * Callback receive `$value`,`$key` and `$index`
+     *
      * @param callable(TValue, TKey, int):bool $callable
      *
      * @return static<TKey, TValue>
@@ -385,6 +435,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Extract a slice of the map
+     *
      * @return static<TKey, TValue>
      *
      * @psalm-suppress  InvalidArgument
@@ -397,6 +449,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Apply a callback on set values
+     *
+     * Callback receive `$value`,`$key` and `$index`
+     *
      * @param callable(TValue, TKey, int):bool $callable
      *
      * @return static<TKey, TValue>
