@@ -4,6 +4,7 @@
 A collection library for PHP.
 
 [![Build Status](https://github.com/micoli/Multitude/workflows/Tests/badge.svg)](https://github.com/micoli/Multitude/actions)
+[![Coverage Status](https://coveralls.io/repos/github/micoli/Multitude/badge.svg?branch=main)](https://coveralls.io/github/micoli/Multitude?branch=main)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 
 Two types of collections are available:
