@@ -2,6 +2,7 @@ test-unit:
 	vendor/bin/phpunit
 
 test-static:
+	vendor/bin/phpstan
 	vendor/bin/psalm
 
 test-coding-standard:
@@ -10,4 +11,4 @@ test-coding-standard:
 update-doc:
 	php ./update-doc.php README.md
 
-tests-all: test-coding-standard test-static test-unit update-doc
+tests-all: test-coding-standard test-unit test-static update-doc

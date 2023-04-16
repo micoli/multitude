@@ -22,7 +22,7 @@ class ImmutableSetTest extends TestCase
     public function it_should_instantiate_and_modify_a_set(): void
     {
         /** @var ImmutableSet<mixed> $set */
-        $set = ImmutableSet::fromArray([1, 3, 4 => 'a']);
+        $set = new ImmutableSet([1, 3, 4 => 'a']);
         $newSet = $set->append('2');
         self::assertFalse($set->hasValue('2'));
         self::assertTrue($newSet->hasValue('2'));
@@ -35,8 +35,7 @@ class ImmutableSetTest extends TestCase
      */
     public function it_should_remove_value_by_value(): void
     {
-        /** @var ImmutableSet<mixed> $set */
-        $set = ImmutableSet::fromArray([1, 3, 4 => 'a']);
+        $set = new ImmutableSet([1, 3, 4 => 'a']);
         $newSet = $set->remove('a');
         self::assertTrue($set->hasValue('a'));
         self::assertFalse($newSet->hasValue('a'));
@@ -51,8 +50,7 @@ class ImmutableSetTest extends TestCase
     {
         $baz = new Baz(1);
         $baz2 = new Baz(1);
-        /** @var ImmutableSet<mixed> $set */
-        $set = ImmutableSet::fromArray([$baz, 3, $baz]);
+        $set = new ImmutableSet([$baz, 3, $baz]);
         self::assertCount(2, $set);
 
         $set->remove($baz2, false);
@@ -73,7 +71,7 @@ class ImmutableSetTest extends TestCase
     public function it_should_be_converted_as_immutable(): void
     {
         /** @var ImmutableSet<mixed> $set */
-        $set = ImmutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $set = new ImmutableSet(['a', 'b', 3, 0, null]);
         $newSet = $set->toMutable();
         self::assertInstanceOf(MutableSet::class, $newSet);
         self::assertSame($set->toArray(), $newSet->toArray());
@@ -84,8 +82,7 @@ class ImmutableSetTest extends TestCase
      */
     public function it_should_filter_set(): void
     {
-        /** @var ImmutableSet<mixed> $set */
-        $set = ImmutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $set = new ImmutableSet(['a', 'b', 3, 0, null]);
         $newSet = $set->filter(fn (mixed $value, mixed $index): bool => $index === 0 || $value === 'b');
         self::assertInstanceOf(ImmutableSet::class, $newSet);
         self::assertSame(['a', 'b', 3, 0, null], $set->toArray());
@@ -97,8 +94,7 @@ class ImmutableSetTest extends TestCase
      */
     public function it_should_slice_set(): void
     {
-        /** @var ImmutableSet<mixed> $set */
-        $set = ImmutableSet::fromArray(['a', 'b', 3, 0, null, 6, '8']);
+        $set = new ImmutableSet(['a', 'b', 3, 0, null, 6, '8']);
         $newSet = $set->slice(1, 3);
         self::assertInstanceOf(ImmutableSet::class, $newSet);
         self::assertSame(['a', 'b', 3, 0, null, 6, '8'], $set->toArray());

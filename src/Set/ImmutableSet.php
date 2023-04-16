@@ -18,6 +18,7 @@ class ImmutableSet extends AbstractSet implements ImmutableInterface
      */
     public function toMutable(): MutableSet
     {
-        return MutableSet::fromArray($this->values);
+        /** @var MutableSet<TValue> */
+        return new MutableSet($this->values);
     }
 }

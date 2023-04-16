@@ -22,7 +22,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_instantiate_and_modify_a_map(): void
     {
         /** @var ImmutableMap<mixed, mixed> $map */
-        $map = ImmutableMap::fromTuples([['a', 1], ['b', 3], [3, 'a']]);
+        $map = new ImmutableMap([['a', 1], ['b', 3], [3, 'a']]);
         $newMap = $map
             ->set('2', '2 as string')
             ->set(2, '2 as int');
@@ -40,7 +40,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_remove_value_by_key(): void
     {
         /** @var ImmutableMap<mixed, mixed> $map */
-        $map = ImmutableMap::fromTuples([['a', 1], ['b', 3], [3, 'a'], ['2', '2 as string'], [2, '2 as int']]);
+        $map = new ImmutableMap([['a', 1], ['b', 3], [3, 'a'], ['2', '2 as string'], [2, '2 as int']]);
         $newMap = $map->removeKey(2);
         self::assertSame('2 as string', $map->get('2'));
         self::assertSame('2 as int', $map->get(2));
@@ -55,7 +55,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_remove_value_by_value(): void
     {
         /** @var ImmutableMap<mixed, mixed> $map */
-        $map = ImmutableMap::fromTuples([['a', 1], ['b', 3], [3, 'a'], ['2', '2 as string'], [2, '2 as int'], ['22', '2 as string']]);
+        $map = new ImmutableMap([['a', 1], ['b', 3], [3, 'a'], ['2', '2 as string'], [2, '2 as int'], ['22', '2 as string']]);
         $newMap = $map->removeValue('2 as string');
         self::assertNotNull($map->get('2'));
         self::assertNotNull($map->get('22'));
@@ -72,7 +72,7 @@ class ImmutableMapTest extends TestCase
     {
         $baz = new Baz(1);
         /** @var ImmutableMap<mixed, mixed> $map */
-        $map = ImmutableMap::fromArray(['a' => $baz, 'b' => 3, 3 => $baz]);
+        $map = new ImmutableMap([['a', $baz], ['b', 3], [3, $baz]]);
         $newMap = $map->removeValue($baz);
         self::assertCount(3, $map);
         self::assertCount(1, $newMap);
@@ -84,7 +84,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_be_unset_as_an_array(): void
     {
         /** @var ImmutableMap<mixed, mixed> $map */
-        $map = ImmutableMap::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
+        $map = new ImmutableMap([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
         self::assertTrue($map->hasKey(3));
         self::assertTrue($map->hasKey('3'));
         self::expectException(LogicException::class);
@@ -96,8 +96,7 @@ class ImmutableMapTest extends TestCase
      */
     public function it_should_be_converted_as_mutable(): void
     {
-        /** @var ImmutableMap<mixed, mixed> $map */
-        $map = ImmutableMap::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $map = new ImmutableMap([['a', 1], ['b', 3], [3, '3 as int']]);
         $newMap = $map->toMutable();
         self::assertInstanceOf(MutableMap::class, $newMap);
         self::assertSame($map->toArray(), $newMap->toArray());
@@ -109,7 +108,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_filter_map(): void
     {
         /** @var ImmutableMap<mixed,mixed> $map */
-        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3']]);
+        $map = new ImmutableMap([[1, 1], [2, 2], [3, 3], ['3', '3']]);
         $newMap = $map->filter(fn (mixed $value, mixed $key): bool => $key === 1 || $value === '3');
         self::assertInstanceOf(ImmutableMap::class, $newMap);
         self::assertSame([[1, 1], [2, 2], [3, 3], ['3', '3']], $map->getTuples());
@@ -122,7 +121,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_slice_map(): void
     {
         /** @var ImmutableMap<mixed,mixed> $map */
-        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map = new ImmutableMap([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
         $newMap = $map->slice(1, 2);
         self::assertInstanceOf(ImmutableMap::class, $newMap);
         self::assertSame([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']], $map->getTuples());
@@ -139,7 +138,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_not_slice_map_with_invalid_offset(): void
     {
         /** @var ImmutableMap<mixed,mixed> $map */
-        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map = new ImmutableMap([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
         self::expectException(InvalidArgumentException::class);
         $map->slice(-1, 2);
     }
@@ -150,7 +149,7 @@ class ImmutableMapTest extends TestCase
     public function it_should_not_slice_map_with_invalid_length(): void
     {
         /** @var ImmutableMap<mixed,mixed> $map */
-        $map = ImmutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map = new ImmutableMap([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
         self::expectException(InvalidArgumentException::class);
         $map->slice(1, -1);
     }

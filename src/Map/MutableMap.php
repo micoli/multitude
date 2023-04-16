@@ -19,6 +19,7 @@ class MutableMap extends AbstractMap implements MutableInterface
      */
     public function toImmutable(): ImmutableMap
     {
-        return ImmutableMap::fromTuples($this->tuples);
+        /** @var ImmutableMap<TKey, TValue> */
+        return new ImmutableMap($this->tuples);
     }
 }

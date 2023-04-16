@@ -54,6 +54,9 @@ jobs:
             - name: "Run Psalm"
               run: vendor/bin/psalm
 
+            - name: "Run Phpstan"
+              run: vendor/bin/phpstan
+
             - name: "Run tests"
               run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 

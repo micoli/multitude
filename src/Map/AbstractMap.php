@@ -10,6 +10,7 @@ use Generator;
 use IteratorAggregate;
 use Micoli\Multitude\AbstractMultitude;
 use Micoli\Multitude\Exception\EmptySetException;
+use Micoli\Multitude\Exception\GenericException;
 use Micoli\Multitude\Exception\InvalidArgumentException;
 use Micoli\Multitude\Exception\LogicException;
 use Micoli\Multitude\Exception\OutOfBoundsException;
@@ -21,8 +22,14 @@ use Traversable;
  * @template TKey
  * @template TValue
  *
- * @implements IteratorAggregate<TKey, TValue>
- * @implements ArrayAccess<TKey, TValue>
+ * @template-implements IteratorAggregate<TKey, TValue>
+ * @template-implements ArrayAccess<TKey, TValue>
+ *
+ * @phpstan-consistent-constructor
+ *
+ * @psalm-consistent-constructor
+ *
+ * @psalm-consistent-templates
  */
 class AbstractMap extends AbstractMultitude implements Countable, IteratorAggregate, ArrayAccess
 {
@@ -37,7 +44,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * @codeCoverageIgnore
      */
-    protected function __construct(array $tuples = [])
+    public function __construct(array $tuples = [])
     {
         if (!($this instanceof MutableInterface) && !($this instanceof ImmutableInterface)) {
             throw new LogicException('Map must be either Mutable or Immutable');
@@ -56,10 +63,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      * @template TV
      *
      * @param iterable<TK, TV> $values
-     *
-     * @return static<TK, TV>
      */
-    public static function fromArray(iterable $values): static
+    public static function fromIterable(iterable $values): static
     {
         $buffer = [];
         foreach ($values as $key => $value) {
@@ -70,21 +75,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
-     * Return a new instance from an array of [$key,$value]. $keys types are preserved
-     *
-     * @template TK
-     * @template TV
-     *
-     * @param list<array{TK, TV}> $values
-     *
-     * @return static<TK, TV>
+     * @return list<array{TKey, TValue}>
      */
-    public static function fromTuples(iterable $values): static
-    {
-        /** @psalm-suppress UnsafeInstantiation */
-        return new static($values);
-    }
-
     public function getTuples(): array
     {
         return $this->tuples;
@@ -113,8 +105,6 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * @param TKey $newKey
      * @param TValue $newValue
-     *
-     * @return static<TKey, TValue>
      */
     public function set(mixed $newKey, mixed $newValue): static
     {
@@ -122,6 +112,10 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
             throw new InvalidArgumentException('Key must not be null');
         }
         $instance = $this->getInstance();
+        /**
+         * @var TKey $key
+         * @var TValue $value
+         */
         foreach ($instance->tuples as $index => [$key, $value]) {
             if ($key === $newKey) {
                 $instance->tuples[$index] = [$newKey, $newValue];
@@ -170,8 +164,6 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
 
     /**
      * @param TKey $searchedKey
-     *
-     * @return int<-1, max>
      */
     private function keyIndex(mixed $searchedKey): int
     {
@@ -219,7 +211,18 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function toArray(): array
     {
-        return iterator_to_array($this->getIterator());
+        $values = [];
+        foreach ($this->tuples as [$key,$value]) {
+            if ($key === null) {
+                throw new GenericException('Invalid array key');
+            }
+            if (!is_int($key) && !is_string($key)) {
+                throw new GenericException('Invalid array key');
+            }
+            $values[$key] = $value;
+        }
+
+        return $values;
     }
 
     /**
@@ -230,7 +233,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      * @param TKey $searchedKey
      * @param ?TValue $defaultValue
      *
-     * @return TValue
+     * @return TValue|null
      */
     public function get(mixed $searchedKey, mixed $defaultValue = null): mixed
     {
@@ -269,7 +272,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
                 return $value;
             }
         }
-        throw new OutOfBoundsException(sprintf('Index %s does not exists', $offset));
+        throw new OutOfBoundsException(sprintf('Index %s does not exists', (string) $offset));
     }
 
     public function offsetSet(mixed $offset, mixed $value): void
@@ -288,7 +291,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
         }
         $keyIndex = $this->keyIndex($offset);
         if ($keyIndex === -1) {
-            throw new OutOfBoundsException(sprintf('Index %s does not exists', $offset));
+            throw new OutOfBoundsException(sprintf('Index %s does not exists', (string) $offset));
         }
 
         unset($this->tuples[$keyIndex]);
@@ -323,7 +326,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * EmptySetException is thrown if map is empty and $throw === true
      *
-     * @return TValue
+     * @return TValue|null
      */
     public function first(bool $throw = true): mixed
     {
@@ -344,7 +347,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * EmptySetException is thrown if map is empty and $throw === true
      *
-     * @return TValue
+     * @return TValue|null
      */
     public function last(bool $throw = true): mixed
     {
@@ -371,32 +374,28 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * @return static<TKey, TResult>
      *
-     * @psalm-suppress  InvalidArgument
+     * @psalm-suppress  ImplementedReturnTypeMismatch
      */
-    public function map(callable $callable): static
+    public function map(callable $callable)
     {
-        /** @var static<TKey, TResult> $instance */
-        $instance = $this->getInstance();
-        foreach ($instance->tuples as $index => [$key, $value]) {
-            $instance->tuples[$index] = [$key, $callable($value, $key)];
+        $tuples = [];
+        foreach ($this->tuples as [$key, $value]) {
+            $tuples[] = [$key, $callable($value, $key)];
         }
 
-        return $instance;
+        return new static($tuples);
     }
 
     /**
      * Iteratively reduce the Map to a single value using a callback function
      * Callback receive `$accumulator`,`$value` and `$key`
      *
-     * @template TResult
      * @template TAccumulator
      *
-     * @param callable(TAccumulator, TValue, TKey):TAccumulator $callable
      * @param TAccumulator $accumulator
+     * @param callable(TAccumulator, TValue, TKey): TAccumulator $callable
      *
      * @return TAccumulator
-     *
-     * @psalm-suppress  InvalidArgument
      */
     public function reduce(callable $callable, mixed $accumulator): mixed
     {
@@ -413,18 +412,12 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      * Callback receive `$value`,`$key` and `$index`
      *
      * @param callable(TValue, TKey, int):bool $callable
-     *
-     * @return static<TKey, TValue>
-     *
-     * @psalm-suppress  InvalidArgument
      */
     public function filter(callable $callable): static
     {
-        /** @var static<TKey, TValue> $instance */
         $instance = $this->getInstance();
         $tuples = $this->tuples;
 
-        /** @var list<array{TKey, TValue}> $this->tuples */
         $instance->tuples = [];
         foreach ($tuples as $index => [$key, $value]) {
             if (!$callable($value, $key, $index)) {
@@ -438,8 +431,6 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
 
     /**
      * Extract a slice of the map
-     *
-     * @return static<TKey, TValue>
      *
      * @psalm-suppress  InvalidArgument
      */
@@ -456,8 +447,6 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      * Callback receive `$value`,`$key` and `$index`
      *
      * @param callable(TValue, TKey, int):bool $callable
-     *
-     * @return static<TKey, TValue>
      */
     public function forEach(callable $callable): static
     {

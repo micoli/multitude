@@ -19,9 +19,15 @@ use Traversable;
 /**
  * @template TValue
  *
- * @implements IteratorAggregate<int, TValue>
+ * @implements \IteratorAggregate<TValue>
+ *
+ * @phpstan-consistent-constructor
+ *
+ * @psalm-consistent-constructor
+ *
+ * @psalm-consistent-templates
  */
-class AbstractSet extends AbstractMultitude implements Countable, IteratorAggregate
+class AbstractSet extends AbstractMultitude implements IteratorAggregate, Countable
 {
     /**
      * @var list<TValue>
@@ -30,42 +36,26 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
     private bool $isMutable;
 
     /**
-     * @param list<TValue> $values
+     * @param iterable<TValue> $values
      *
      * @codeCoverageIgnore
      */
-    protected function __construct(array $values = [])
+    public function __construct(iterable $values = [])
     {
         if (!($this instanceof MutableInterface) && !($this instanceof ImmutableInterface)) {
-            throw new LogicException('Map must be either Mutable or Immutable');
+            throw new LogicException('Set must be either Mutable or Immutable');
         }
         if (($this instanceof MutableInterface) == ($this instanceof ImmutableInterface)) {
-            throw new LogicException('Map must be either Mutable or Immutable');
+            throw new LogicException('Set must be either Mutable or Immutable');
         }
         $this->isMutable = $this instanceof MutableInterface;
-        $this->values = $values;
-    }
-
-    /**
-     * Return a new instance from an array. dedup values on construction
-     *
-     * @template TV
-     *
-     * @param iterable<TV> $values
-     *
-     * @return static<TV>
-     */
-    public static function fromArray(iterable $values): static
-    {
-        $buffer = [];
+        $this->values = [];
         foreach ($values as $value) {
-            if (in_array($value, $buffer, true)) {
+            if (in_array($value, $this->values, true)) {
                 continue;
             }
-            $buffer[] = $value;
+            $this->values[] = $value;
         }
-        /** @psalm-suppress UnsafeInstantiation */
-        return new static($buffer);
     }
 
     /**
@@ -76,7 +66,10 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
         return count($this->values);
     }
 
-    private function getInstance(): static
+    /**
+     * @return static
+     */
+    private function getInstance()
     {
         return $this->isMutable ? $this : clone ($this);
     }
@@ -87,16 +80,17 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      * Throw a ValueAlreadyPresentException if value is already present in the set and $throw==true
      *
      * @param TValue $newValue
-     *
-     * @return static<TValue>
      */
     public function append(mixed $newValue, bool $throw = true): static
     {
         $instance = $this->getInstance();
+        /**
+         * @var TValue $value
+         */
         foreach ($instance->values as $value) {
             if ($value === $newValue) {
                 if ($throw) {
-                    throw new ValueAlreadyPresentException(sprintf('Value %s already present', $newValue));
+                    throw new ValueAlreadyPresentException(sprintf('Value %s already present', (string) $newValue));
                 }
 
                 return $this;
@@ -135,13 +129,11 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
         if (is_object($searchedValue)) {
             throw new NotFoundException(sprintf('Value object #%s not found', spl_object_id($searchedValue)));
         }
-        throw new NotFoundException(sprintf('Value %s not found', $searchedValue));
+        throw new NotFoundException(sprintf('Value %s not found', (string) $searchedValue));
     }
 
     /**
      * @param TValue $searchedValue
-     *
-     * @return int<-1, max>
      */
     private function indexOf(mixed $searchedValue): int
     {
@@ -200,7 +192,7 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      * @param int $index
      * @param ?TValue $defaultValue
      *
-     * @return TValue
+     * @return TValue|null
      */
     public function get(mixed $index, mixed $defaultValue = null): mixed
     {
@@ -240,7 +232,7 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * EmptySetException is thrown if set is empty and $throw === true
      *
-     * @return TValue
+     * @return TValue|null
      */
     public function first(bool $throw = true): mixed
     {
@@ -261,7 +253,7 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * EmptySetException is thrown if set is empty and $throw === true
      *
-     * @return TValue
+     * @return TValue|null
      */
     public function last(bool $throw = true): mixed
     {
@@ -283,39 +275,32 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * @template TResult
      *
-     * @param callable(TValue, int):TResult $callable
+     * @param callable(TValue, int): TResult $callable
      *
      * @return static<TResult>
      *
-     * @psalm-suppress  InvalidArgument
+     * @psalm-suppress ImplementedReturnTypeMismatch
      */
-    public function map(callable $callable): static
+    public function map(callable $callable)
     {
-        /** @var static<TResult> $instance */
-        $instance = $this->getInstance();
-        $instance->values = array_map(
-            /** @return TResult */
-            fn (mixed $value, mixed $key): mixed => $callable($value, $key),
-            $instance->values,
-            array_keys($instance->values),
-        );
+        $values = [];
+        foreach ($this->values as $index => $value) {
+            $values[] = $callable($value, $index);
+        }
 
-        return $instance;
+        return new static($values);
     }
 
     /**
      * Iteratively reduce the Set to a single value using a callback function
      * Callback receive `$accumulator`,`$value` and `$index`
      *
-     * @template TResult
      * @template TAccumulator
      *
      * @param callable(TAccumulator, TValue, int):TAccumulator $callable
      * @param TAccumulator $accumulator
      *
      * @return TAccumulator
-     *
-     * @psalm-suppress  InvalidArgument
      */
     public function reduce(callable $callable, mixed $accumulator): mixed
     {
@@ -332,16 +317,12 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      * Callback receive `$value` and `$index`
      *
      * @param callable(TValue, int):bool $callable
-     *
-     * @return static<TValue>
      */
     public function filter(callable $callable): static
     {
-        /** @var static<TValue> $instance */
         $instance = $this->getInstance();
         $values = $this->values;
 
-        /** @var list<TValue> $instance->values */
         $instance->values = [];
         foreach ($values as $index => $value) {
             if (!$callable($value, $index)) {
@@ -355,8 +336,6 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
 
     /**
      * Extract a slice of the set
-     *
-     * @return static<TValue>
      */
     public function slice(int $offset, ?int $length = null): static
     {
@@ -370,8 +349,6 @@ class AbstractSet extends AbstractMultitude implements Countable, IteratorAggreg
      * Callback receive `$value` and `$index`
      *
      * @param callable(TValue, int):bool $callable
-     *
-     * @return static<TValue>
      */
     public function forEach(callable $callable): static
     {

@@ -36,9 +36,9 @@ While this library is still under development, it is still in early development 
 ## Quick start
 
 Constructor are only statics:
-- `MutableSet::fromArray(['a','b','c'])`
-- `MutableMap::fromArray([2=>'a',3=>'b',4=>'c'])`
-- `MutableMap::fromTuples([[2,'a'],['2','aa'],[3,'b'],['3','bb'],[4,'c'])`
+- `new MutableSet(['a','b','c'])`
+- `new MutableMap([2=>'a',3=>'b',4=>'c'])`
+- `new MutableMap([[2,'a'],['2','aa'],[3,'b'],['3','bb'],[4,'c'])`
 
 You can use fromTuples constructor if you need a strong typing for keys of your map, e.g. `'2'` key is different of `2`.
 
@@ -50,20 +50,16 @@ Methods that accept a `bool $throw` parameter will trigger an exception if `$thr
     public function testItShouldFullyWorkWithAssociativeArray(): void
     {
         /** @var ImmutableMap<string, array{value:int,tags:list<string>}> $map */
-        $map = ImmutableMap::fromTuples([
+        $map = new ImmutableMap([
             ['library', ['value' => 10, 'tags' => ['tag1']]],
             ['projects', ['value' => 5, 'tags' => ['tag2']]],
             ['gist', ['value' => 7, 'tags' => ['tag1', 'tag2']]],
             ['repository', ['value' => 7, 'tags' => ['tag3']]],
         ]);
-        $sum = $map
+        $totalSum = $map
             ->filter(fn (array $project, mixed $category): bool => array_search('tag1', $project['tags']) !== false)
-            ->reduce(function (int $sum, mixed $project, mixed $category): int {
-                $sum += $project['value'];
-
-                return $sum;
-            }, 0);
-        self::assertSame($sum, 17);
+            ->reduce(fn (int $sum, mixed $project, mixed $category): int => $sum + $project['value'], 0);
+        self::assertSame($totalSum, 17);
         self::assertCount(4, $map);
     }
 ```
@@ -131,10 +127,24 @@ namespace Micoli\Multitude\Tests\Fixtures;
 use Micoli\Multitude\Map\ImmutableMap;
 
 /**
- * @extends ImmutableMap<string, Project>
+ * @template TKey of string
+ * @template TValue of Project
+ *
+ * @extends ImmutableMap<TKey, TValue>
  */
 class Projects extends ImmutableMap
 {
+    /**
+     * Add or replace a value in the map
+     *
+     * @param TKey $newKey
+     * @param TValue $newValue
+     */
+    public function improvedSet(mixed $newKey, mixed $newValue): static
+    {
+        // do specific stuff, like logging or ther
+        return $this->set($newKey, $newValue);
+    }
 }
 
 ```
@@ -145,21 +155,23 @@ class Projects extends ImmutableMap
 ```php
     public function testItShouldFullyWorkWithObjects(): void
     {
-        $map = Projects::fromTuples([
-            ['library', new Project(10, Tags::fromArray(['tag1']))],
-            ['projects', new Project(5, Tags::fromArray(['tag2']))],
-            ['gist', new Project(7, Tags::fromArray(['tag1', 'tag2']))],
-            ['repository', new Project(7, Tags::fromArray(['tag3']))],
+        $map = new Projects([
+            ['library', new Project(10, new Tags(['tag1']))],
+            ['projects', new Project(5, new Tags(['tag2']))],
+            ['gist', new Project(7, new Tags(['tag1', 'tag2']))],
+            ['repository', new Project(7, new Tags(['tag3']))],
         ]);
-        $sum = $map
+        $totalSum = $map
             ->filter(fn (Project $project, mixed $category): bool => $project->tags->hasValue('tag1'))
-            ->reduce(function (int $sum, Project $project, mixed $category): int {
-                $sum += $project->value;
-
-                return $sum;
-            }, 0);
-        self::assertSame($sum, 17);
+            ->reduce(fn (int $sum, Project $project, mixed $category): int => $sum + $project->value, 0);
+        self::assertInstanceOf(
+            Projects::class,
+            $map->filter(fn (Project $project, mixed $category): bool => true),
+        );
+        self::assertSame($totalSum, 17);
         self::assertCount(4, $map);
+        $newMap = $map->improvedSet('NewType', new Project(10, new Tags(['tag4'])));
+        self::assertCount(5, $newMap);
     }
 ```
 
@@ -171,12 +183,12 @@ class Projects extends ImmutableMap
 
 [//]: <> (class-method-summary-placeholder-start "Micoli\Multitude\Set\AbstractSet" " - ")
 
+ -  [__construct](#user-content-AbstractSet____construct)
  -  [append](#user-content-AbstractSet__append)
  -  [count](#user-content-AbstractSet__count)
  -  [filter](#user-content-AbstractSet__filter)
  -  [first](#user-content-AbstractSet__first)
  -  [forEach](#user-content-AbstractSet__forEach)
- -  [fromArray](#user-content-AbstractSet__fromArray)
  -  [get](#user-content-AbstractSet__get)
  -  [getIterator](#user-content-AbstractSet__getIterator)
  -  [hasValue](#user-content-AbstractSet__hasValue)
@@ -196,12 +208,12 @@ class Projects extends ImmutableMap
 
 [//]: <> (class-method-summary-placeholder-start "Micoli\Multitude\Map\AbstractMap" " - ")
 
+ -  [__construct](#user-content-AbstractMap____construct)
  -  [count](#user-content-AbstractMap__count)
  -  [filter](#user-content-AbstractMap__filter)
  -  [first](#user-content-AbstractMap__first)
  -  [forEach](#user-content-AbstractMap__forEach)
- -  [fromArray](#user-content-AbstractMap__fromArray)
- -  [fromTuples](#user-content-AbstractMap__fromTuples)
+ -  [fromIterable](#user-content-AbstractMap__fromIterable)
  -  [get](#user-content-AbstractMap__get)
  -  [getIterator](#user-content-AbstractMap__getIterator)
  -  [getTuples](#user-content-AbstractMap__getTuples)
@@ -226,6 +238,11 @@ class Projects extends ImmutableMap
 
 ## AbstractSet
 [//]: <> (class-method-documentation-placeholder-start "Micoli\Multitude\Set\AbstractSet" "### ")
+
+### `AbstractSet::__construct` <a id="AbstractSet____construct"></a>
+
+`public function __construct(iterable $values = [])`
+
 
 ### `AbstractSet::append` <a id="AbstractSet__append"></a>
 
@@ -254,11 +271,6 @@ Return the first value in the set
 Apply a callback on set values
 
 Callback receive `$value` and `$index`
-### `AbstractSet::fromArray` <a id="AbstractSet__fromArray"></a>
-
-`public static function fromArray(iterable $values): static`
-
-Return a new instance from an array. dedup values on construction
 ### `AbstractSet::get` <a id="AbstractSet__get"></a>
 
 `public function get(mixed $index, mixed $defaultValue = null): mixed`
@@ -291,7 +303,7 @@ Return an iterator of keys
 Return the latest value in the set
 ### `AbstractSet::map` <a id="AbstractSet__map"></a>
 
-`public function map(callable $callable): static`
+`public function map(callable $callable)`
 
 Applies the callback to the values, keys are preserved
 
@@ -330,6 +342,11 @@ Return an iterator of values
 
 [//]: <> (class-method-documentation-placeholder-start "Micoli\Multitude\Map\AbstractMap" "### ")
 
+### `AbstractMap::__construct` <a id="AbstractMap____construct"></a>
+
+`public function __construct(array $tuples = [])`
+
+
 ### `AbstractMap::count` <a id="AbstractMap__count"></a>
 
 `public function count(): int`
@@ -350,16 +367,11 @@ Return the first value in the map
 `public function forEach(callable $callable): static`
 
 Apply a callback on set values
-### `AbstractMap::fromArray` <a id="AbstractMap__fromArray"></a>
+### `AbstractMap::fromIterable` <a id="AbstractMap__fromIterable"></a>
 
-`public static function fromArray(iterable $values): static`
+`public static function fromIterable(iterable $values): static`
 
 Return a new instance from an array.
-### `AbstractMap::fromTuples` <a id="AbstractMap__fromTuples"></a>
-
-`public static function fromTuples(iterable $values): static`
-
-Return a new instance from an array of [$key,$value]. $keys types are preserved
 ### `AbstractMap::get` <a id="AbstractMap__get"></a>
 
 `public function get(mixed $searchedKey, mixed $defaultValue = null): mixed`
@@ -397,7 +409,7 @@ Return an iterator of keys
 Return the latest value in the map
 ### `AbstractMap::map` <a id="AbstractMap__map"></a>
 
-`public function map(callable $callable): static`
+`public function map(callable $callable)`
 
 Applies the callback to the values, keys are preserved
 ### `AbstractMap::offsetExists` <a id="AbstractMap__offsetExists"></a>

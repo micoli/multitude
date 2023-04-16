@@ -21,7 +21,7 @@ class MutableSetTest extends TestCase
     public function it_should_instantiate_and_modify_a_map(): void
     {
         /** @var MutableSet<mixed> $set */
-        $set = MutableSet::fromArray([1, 3, 4 => 'a']);
+        $set = new MutableSet([1, 3, 4 => 'a']);
         $set->append('2');
         $set->append(2);
         $set->append('3');
@@ -40,7 +40,7 @@ class MutableSetTest extends TestCase
     public function it_should_remove_value_by_value(): void
     {
         /** @var MutableSet<mixed> $set */
-        $set = MutableSet::fromArray(['a' => 1, 'b' => 3, 3 => 'a']);
+        $set = new MutableSet(['a' => 1, 'b' => 3, 3 => 'a']);
         $set->remove('a');
         self::assertFalse($set->hasValue('2'));
         self::expectException(LogicException::class);
@@ -54,8 +54,7 @@ class MutableSetTest extends TestCase
     {
         $baz = new Baz(1);
         $baz2 = new Baz(1);
-        /** @var MutableSet<mixed> $set */
-        $set = MutableSet::fromArray([$baz, 3, $baz]);
+        $set = new MutableSet([$baz, 3, $baz]);
         self::assertCount(2, $set);
 
         $set->remove($baz2, false);
@@ -74,8 +73,7 @@ class MutableSetTest extends TestCase
      */
     public function it_should_be_converted_as_immutable(): void
     {
-        /** @var MutableSet<mixed> $set */
-        $set = MutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $set = new MutableSet(['a', 'b', 3, 0, null]);
         $newMap = $set->toImmutable();
         self::assertSame($set->toArray(), $newMap->toArray());
     }
@@ -85,8 +83,7 @@ class MutableSetTest extends TestCase
      */
     public function it_should_filter_map(): void
     {
-        /** @var MutableSet<mixed> $set */
-        $set = MutableSet::fromArray(['a', 'b', 3, 0, null]);
+        $set = new MutableSet(['a', 'b', 3, 0, null]);
         $set->filter(fn (mixed $value, mixed $index): bool => $index === 0 || $value === 'b');
         self::assertSame(['a', 'b'], $set->toArray());
     }
@@ -96,12 +93,11 @@ class MutableSetTest extends TestCase
      */
     public function it_should_slice_set(): void
     {
-        /** @var MutableSet< mixed> $set */
-        $set = MutableSet::fromArray(['a', 'b', 3, 0, null, 6, '8']);
+        $set = new MutableSet(['a', 'b', 3, 0, null, 6, '8']);
         $set->slice(1, 3);
         self::assertSame(['b', 3, 0, null], $set->toArray());
 
-        $set = MutableSet::fromArray(['a', 'b', 3, 0, null, 6, '8']);
+        $set = new MutableSet(['a', 'b', 3, 0, null, 6, '8']);
         $set->slice(1);
         self::assertSame(['b', 3, 0, null, 6, '8'], $set->toArray());
 

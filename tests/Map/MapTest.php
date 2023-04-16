@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Micoli\Multitude\Tests\Map;
 
 use Micoli\Multitude\Exception\EmptySetException;
+use Micoli\Multitude\Exception\GenericException;
 use Micoli\Multitude\Exception\InvalidArgumentException;
 use Micoli\Multitude\Exception\OutOfBoundsException;
 use Micoli\Multitude\Map\AbstractMap;
@@ -18,6 +19,9 @@ use PHPUnit\Framework\TestCase;
  */
 class MapTest extends TestCase
 {
+    /**
+     * @return iterable<class-string, list<class-string<AbstractMap<mixed,mixed>>>>
+     */
     public static function provideMapClass(): iterable
     {
         yield MutableMap::class => [MutableMap::class];
@@ -29,12 +33,11 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_instantiate_map(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => 'a']);
+        $map = new $className([['a', 1], ['b', 3], [3, 'a']]);
         self::assertSame([
             'a' => 1,
             'b' => 3,
@@ -47,14 +50,41 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_not_convert_to_array_with_null_key(string $className): void
+    {
+        $map = new $className([['a', 1], [null, 3], [3, 'a']]);
+        self::expectException(GenericException::class);
+        $map->toArray();
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_not_convert_to_array_with_invalid_key(string $className): void
+    {
+        $map = new $className([['a', 1], [json_decode('{"aa":1}'), 3], [3, 'a']]);
+        self::expectException(GenericException::class);
+        $map->toArray();
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_remove_value_by_unknown_object_value(string $className): void
     {
         $baz = new Baz(1);
         $baz2 = new Baz(1);
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => $baz, 'b' => 3, 3 => $baz]);
+        $map = $className::fromIterable(['a' => $baz, 'b' => 3, 3 => $baz]);
         $map->removeValue($baz2);
         self::assertCount(3, $map);
     }
@@ -64,12 +94,11 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_be_counted(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => 2]);
+        $map = new $className(['a' => 1, 'b' => 3, 3 => 2]);
         self::assertCount(3, $map);
     }
 
@@ -78,17 +107,17 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_be_iterated(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => 2]);
-        $result = '';
+        /** @var AbstractMap<int|string, int> $map */
+        $map = new $className([['a', 1], ['b', 3], [3, 2]]);
+        $result = [];
         foreach ($map as $k => $v) {
-            $result = sprintf('%s,%s=>%s', $result, $k, $v);
+            $result[] = [$k, $v];
         }
-        self::assertSame(',a=>1,b=>3,3=>2', $result);
+        self::assertSame([['a', 1], ['b', 3], [3, 2]], $result);
     }
 
     /**
@@ -96,12 +125,11 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_be_accessed_as_an_array(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
+        $map = new $className([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
         self::assertSame('3 as int', $map[3]);
         self::assertSame('3 as string', $map['3']);
         if ($className === MutableMap::class) {
@@ -119,12 +147,12 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_be_tested_as_empty(string $className): void
     {
-        self::assertTrue($className::fromTuples([])->isEmpty());
-        self::assertFalse($className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']])->isEmpty());
+        self::assertTrue((new $className([]))->isEmpty());
+        self::assertFalse((new $className([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]))->isEmpty());
     }
 
     /**
@@ -132,12 +160,11 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_be_ammended_as_an_array(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $map = new $className(['a' => 1, 'b' => 3, 3 => '3 as int']);
         self::expectException(InvalidArgumentException::class);
         /** @psalm-suppress NullArrayOffset */
         $map[null] = 'impossible';
@@ -148,17 +175,17 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_iterate_keys(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
-        $keyList = '';
+        /** @var AbstractMap<int|string,int|string> $map */
+        $map = new $className([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
+        $keyList = [];
         foreach ($map->keys() as $k) {
-            $keyList .= $k . ',';
+            $keyList[] = $k;
         }
-        self::assertSame('a,b,3,3,', $keyList);
+        self::assertSame(['a', 'b', 3, '3'], $keyList);
     }
 
     /**
@@ -166,18 +193,18 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_update_by_key(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
+        /** @var AbstractMap<int|string,int|string> $map */
+        $map = new $className([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
         $newMap = $map->set('a', 111);
-        $keyList = '';
+        $keyList = [];
         foreach ($newMap->values() as $k) {
-            $keyList .= $k . ',';
+            $keyList[] = $k;
         }
-        self::assertSame('111,3,3 as int,3 as string,', $keyList);
+        self::assertSame([111, 3, '3 as int', '3 as string'], $keyList);
     }
 
     /**
@@ -185,17 +212,17 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_iterate_values(string $className): void
     {
-        /** @var MutableMap<mixed,mixed> $map */
-        $map = $className::fromTuples([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
-        $valueList = '';
+        /** @var AbstractMap<int|string,int|string> $map */
+        $map = new $className([['a', 1], ['b', 3], [3, '3 as int'], ['3', '3 as string']]);
+        $valueList = [];
         foreach ($map->values() as $v) {
-            $valueList .= $v . ',';
+            $valueList[] = $v;
         }
-        self::assertSame('1,3,3 as int,3 as string,', $valueList);
+        self::assertSame([1, 3, '3 as int', '3 as string'], $valueList);
     }
 
     /**
@@ -203,22 +230,22 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_get_first_element(string $className): void
     {
-        /** @var AbstractMap<mixed, mixed> $set */
-        $set = $className::fromArray(['a', 'b', 3, 0, null]);
-        self::assertSame('a', $set->first());
+        /** @var AbstractMap<mixed, mixed> $map */
+        $map = $className::fromIterable(['a', 'b', 3, 0, null]);
+        self::assertSame('a', $map->first());
 
-        /** @var AbstractMap<mixed, mixed> $set */
-        $set = $className::fromArray([]);
-        self::assertSame(null, $set->first(false));
+        /** @var AbstractMap<mixed, mixed> $map */
+        $map = new $className([]);
+        self::assertSame(null, $map->first(false));
 
-        /** @var AbstractMap<mixed, mixed> $set */
-        $set = $className::fromArray([]);
+        /** @var AbstractMap<mixed, mixed> $map */
+        $map = new $className([]);
         self::expectException(EmptySetException::class);
-        $set->first();
+        $map->first();
     }
 
     /**
@@ -226,20 +253,20 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_get_last_element(string $className): void
     {
         /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $map = $className::fromIterable(['a' => 1, 'b' => 3, 3 => '3 as int']);
         self::assertSame('3 as int', $map->last());
 
         /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray([]);
+        $map = new $className([]);
         self::assertSame(null, $map->last(false));
 
         /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray([]);
+        $map = new $className([]);
         self::expectException(EmptySetException::class);
         $map->last();
     }
@@ -249,13 +276,13 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_map_values(string $className): void
     {
-        /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
-        $newMap = $map->map(fn (mixed $value, mixed $key): string => sprintf('%s=>%s', $key, $value));
+        /** @var AbstractMap<string|int,string|int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $newMap = $map->map(fn (string|int $value, string|int $key): string => sprintf('%s=>%s', (string) $key, (string) $value));
         self::assertInstanceOf($className, $newMap);
         self::assertSame([
             'a' => 'a=>1',
@@ -269,12 +296,12 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_reduce_values(string $className): void
     {
         /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $map = $className::fromIterable(['a' => 1, 'b' => 3, 3 => '3 as int']);
         $result = $map->reduce(function (array $accumulator, mixed $value, mixed $key): array {
             $accumulator[] = [$value, $key];
 
@@ -293,12 +320,12 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_reduce_to_a_single_value(string $className): void
     {
-        /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray([1 => 1, 2 => 2, 3 => 3]);
+        /** @var AbstractMap<int, int> $map */
+        $map = $className::fromIterable([1 => 1, 2 => 2, 3 => 3]);
         $result = $map->reduce(function (int $accumulator, mixed $value, mixed $key): int {
             $accumulator += $value * $key;
 
@@ -312,19 +339,21 @@ class MapTest extends TestCase
      *
      * @dataProvider provideMapClass
      *
-     * @param class-string<AbstractMap> $className
+     * @param class-string<AbstractMap<mixed, mixed>> $className
      */
     public function it_should_use_foreach(string $className): void
     {
-        /** @var AbstractMap<mixed,mixed> $map */
-        $map = $className::fromArray([1 => 1, 2 => 2, 3 => 3]);
-        $result = '';
-        $newMap = $map->foreach(function (mixed $value, mixed $key, int $index) use (&$result): bool {
-            $result = sprintf('%s,%s=>%s', $result, $value, $key);
+        /** @var AbstractMap<int,int> $map */
+        $map = $className::fromIterable([1 => 1, 2 => 2, 3 => 3, 4 => 4]);
+
+        $result = [];
+        $newMap = $map->foreach(function (int $value, int $key, int $index) use (&$result): bool {
+            /** @var list<array{int,int}> $result */
+            $result[] = [$key, $value];
 
             return $value !== 3;
-        });
+        })->foreach(fn (int $value, int $key, int $index): bool => true);
         self::assertInstanceOf($className, $newMap);
-        self::assertSame(',1=>1,2=>2,3=>3', $result);
+        self::assertSame([[1, 1], [2, 2], [3, 3]], $result);
     }
 }

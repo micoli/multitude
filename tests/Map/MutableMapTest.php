@@ -22,7 +22,7 @@ class MutableMapTest extends TestCase
     public function it_should_instantiate_and_modify_a_map(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromArray(['a' => 1, 'b' => 3, 3 => 'a']);
+        $map = MutableMap::fromIterable(['a' => 1, 'b' => 3, 3 => 'a']);
         $map->set('2', '2 as string');
         $map->set(2, '2 as int');
         self::assertSame('2 as string', $map->get('2'));
@@ -37,7 +37,7 @@ class MutableMapTest extends TestCase
     public function it_should_remove_value_by_key(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromArray(['a' => 1, 'b' => 3, 3 => 'a']);
+        $map = MutableMap::fromIterable(['a' => 1, 'b' => 3, 3 => 'a']);
         $map->set('2', '2 as string');
         $map->set(2, '2 as int');
         $map->removeKey(2);
@@ -51,7 +51,7 @@ class MutableMapTest extends TestCase
     public function it_should_remove_value_by_value(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromArray(['a' => 1, 'b' => 3, 3 => 'a']);
+        $map = new MutableMap([['a', 1], ['b', 3], [3, 'a']]);
         $map->set('2', '2 as string');
         $map->set(2, '2 as int');
         $map->set('22', '2 as string');
@@ -68,7 +68,7 @@ class MutableMapTest extends TestCase
     {
         $baz = new Baz(1);
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromArray(['a' => $baz, 'b' => 3, 3 => $baz]);
+        $map = new MutableMap([['a', $baz], ['b', 3], [3, $baz]]);
         $map->removeValue($baz);
         self::assertCount(1, $map);
     }
@@ -79,7 +79,7 @@ class MutableMapTest extends TestCase
     public function it_should_be_unset_as_an_array(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $map = new MutableMap([['a', 1], ['b', 3], [3, '3 as int']]);
         $map->set('3', '3 as string');
         self::assertTrue($map->hasKey(3));
         self::assertTrue($map->hasKey('3'));
@@ -97,7 +97,7 @@ class MutableMapTest extends TestCase
     public function it_should_be_converted_as_immutable(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromArray(['a' => 1, 'b' => 3, 3 => '3 as int']);
+        $map = new MutableMap([['a', 1], ['b', 3], [3, '3 as int']]);
         $newMap = $map->toImmutable();
         self::assertInstanceOf(ImmutableMap::class, $newMap);
         self::assertSame($map->toArray(), $newMap->toArray());
@@ -109,7 +109,7 @@ class MutableMapTest extends TestCase
     public function it_should_filter_map(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3']]);
+        $map = new MutableMap([[1, 1], [2, 2], [3, 3], ['3', '3']]);
         $map->filter(fn (mixed $value, mixed $key): bool => $key === 1 || $value === '3');
         self::assertInstanceOf(MutableMap::class, $map);
         self::assertSame([[1, 1], ['3', '3']], $map->getTuples());
@@ -121,12 +121,12 @@ class MutableMapTest extends TestCase
     public function it_should_slice_map(): void
     {
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map = new MutableMap([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
         $map->slice(1, 2);
         self::assertSame([[2, 2], [3, 3], ['3', '3']], $map->getTuples());
 
         /** @var MutableMap<mixed,mixed> $map */
-        $map = MutableMap::fromTuples([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
+        $map = new MutableMap([[1, 1], [2, 2], [3, 3], ['3', '3'], ['4', '4']]);
         $map->slice(1);
         self::assertSame([[2, 2], [3, 3], ['3', '3'], ['4', '4']], $map->getTuples());
 
