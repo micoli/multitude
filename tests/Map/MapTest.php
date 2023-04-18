@@ -374,4 +374,73 @@ class MapTest extends TestCase
         self::assertInstanceOf($className, $newMap);
         self::assertSame([[1, 1], [2, 2], [3, 3]], $result);
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_be_sorted_by_value(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        $result = $map->sort(fn (int $valueA, int $valueB, string $keyA, string $keyB, int $indexA, int $indexB) => $valueB <=> $valueA);
+        if ($map instanceof MutableMap) {
+            /** @psalm-suppress TypeDoesNotContainType */
+            self::assertSame($result, $map);
+        } else {
+            self::assertNotSame($result, $map);
+        }
+        self::assertSame(
+            ['c' => 3, 'b' => 2, 'a' => 1],
+            $result->toArray(),
+        );
+        self::assertSame([0, 1, 2], array_keys($result->getTuples()));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_be_sorted_by_key(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        $result = $map->sort(fn (int $valueA, int $valueB, string $keyA, string $keyB, int $indexA, int $indexB) => $keyB <=> $keyA);
+        if ($map instanceof MutableMap) {
+            /** @psalm-suppress TypeDoesNotContainType */
+            self::assertSame($result, $map);
+        } else {
+            self::assertNotSame($result, $map);
+        }
+        self::assertSame(['c' => 3, 'b' => 2, 'a' => 1], $result->toArray());
+        self::assertSame([0, 1, 2], array_keys($result->getTuples()));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_be_sorted_by_index(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        $result = $map->sort(fn (int $valueA, int $valueB, string $keyA, string $keyB, int $indexA, int $indexB) => $indexB <=> $indexA);
+        if ($map instanceof MutableMap) {
+            /** @psalm-suppress TypeDoesNotContainType */
+            self::assertSame($result, $map);
+        } else {
+            self::assertNotSame($result, $map);
+        }
+        self::assertSame(['c' => 3, 'b' => 2, 'a' => 1], $result->toArray());
+        self::assertSame([0, 1, 2], array_keys($result->getTuples()));
+    }
 }

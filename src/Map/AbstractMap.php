@@ -433,6 +433,47 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Sort the map using a callback function
+     * callback is of callable(TValue, TValue, TKey, TKey, int, int): int
+     * and must return -1,0,1 as spaceship operator
+     *
+     * Callback receive `$valueA`,`$valueB`,`$keyA`,`$keyB`, `$indexA` and `$indexB`
+     *
+     * @param callable(TValue, TValue, TKey, TKey, int, int): int $callable
+     */
+    public function sort(callable $callable): static
+    {
+        $instance = $this->getInstance();
+
+        $temp = array_map(
+            fn ($tuple, $index) => [$tuple[1], $tuple[0], $index],
+            $instance->tuples,
+            array_keys($instance->tuples),
+        );
+        uasort(
+            $temp,
+            /**
+             * @param array{TValue, TKey, int} $valueA
+             * @param array{TValue, TKey, int} $valueB
+             */
+            fn (array $valueA, array $valueB) => $callable(
+                $valueA[0],
+                $valueB[0],
+                $valueA[1],
+                $valueB[1],
+                $valueA[2],
+                $valueB[2],
+            ),
+        );
+        $instance->tuples = array_values(array_map(
+            fn (array $record) => [$record[1], $record[0]],
+            $temp,
+        ));
+
+        return $instance;
+    }
+
+    /**
      * Extract a slice of the map
      *
      * @psalm-suppress  InvalidArgument

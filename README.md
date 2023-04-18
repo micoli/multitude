@@ -196,6 +196,7 @@ class Projects extends ImmutableMap
  -  [reduce](#user-content-AbstractSet__reduce)
  -  [remove](#user-content-AbstractSet__remove)
  -  [slice](#user-content-AbstractSet__slice)
+ -  [sort](#user-content-AbstractSet__sort)
  -  [toArray](#user-content-AbstractSet__toArray)
  -  [values](#user-content-AbstractSet__values)
 
@@ -228,6 +229,7 @@ class Projects extends ImmutableMap
  -  [removeValue](#user-content-AbstractMap__removeValue)
  -  [set](#user-content-AbstractMap__set)
  -  [slice](#user-content-AbstractMap__slice)
+ -  [sort](#user-content-AbstractMap__sort)
  -  [toArray](#user-content-AbstractMap__toArray)
  -  [values](#user-content-AbstractMap__values)
 
@@ -322,6 +324,15 @@ Remove a value in the set
 `public function slice(int $offset, ?int $length = null): static`
 
 Extract a slice of the set
+### `AbstractSet::sort` <a id="AbstractSet__sort"></a>
+
+`public function sort(callable $callable): static`
+
+Sort the map using a callback function
+
+callback is of callable (TValue, TValue, int, int): int
+
+and must return -1,0,1 as spaceship operator
 ### `AbstractSet::toArray` <a id="AbstractSet__toArray"></a>
 
 `public function toArray(): array`
@@ -456,6 +467,15 @@ Add or replace a value in the map
 `public function slice(int $offset, ?int $length = null): static`
 
 Extract a slice of the map
+### `AbstractMap::sort` <a id="AbstractMap__sort"></a>
+
+`public function sort(callable $callable): static`
+
+Sort the map using a callback function
+
+callback is of callable(TValue, TValue, TKey, TKey, int, int): int
+
+and must return -1,0,1 as spaceship operator
 ### `AbstractMap::toArray` <a id="AbstractMap__toArray"></a>
 
 `public function toArray(): array`

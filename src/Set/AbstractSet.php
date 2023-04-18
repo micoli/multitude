@@ -334,6 +334,46 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     }
 
     /**
+     * Sort the map using a callback function
+     * callback is of callable (TValue, TValue, int, int): int
+     * and must return -1,0,1 as spaceship operator
+     *
+     * Callback receive `$valueA`,`$valueB`, `$indexA` and `$indexB`
+     *
+     * @param callable(TValue, TValue, int, int): int $callable
+     */
+    public function sort(callable $callable): static
+    {
+        $instance = $this->getInstance();
+
+        /** @var list<array{TValue, int}> $temp */
+        $temp = array_map(
+            fn ($value, $index) => [$value, $index],
+            $instance->values,
+            array_keys($instance->values),
+        );
+        uasort(
+            $temp,
+            /**
+             * @param array{TValue, int} $valueA
+             * @param array{TValue, int} $valueB
+             */
+            fn (array $valueA, array $valueB) => $callable(
+                $valueA[0],
+                $valueB[0],
+                $valueA[1],
+                $valueB[1],
+            ),
+        );
+        $instance->values = array_values(array_map(
+            fn (array $record) => $record[0],
+            $temp,
+        ));
+
+        return $instance;
+    }
+
+    /**
      * Extract a slice of the set
      */
     public function slice(int $offset, ?int $length = null): static

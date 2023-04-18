@@ -270,4 +270,48 @@ class SetTest extends TestCase
         });
         self::assertSame([[0, 1], [1, 3], [2, 2], [3, 4]], $result);
     }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideSetClass
+     *
+     * @param class-string<AbstractSet<mixed>> $className
+     */
+    public function it_should_be_sorted_by_value(string $className): void
+    {
+        /** @var AbstractSet<string> $map */
+        $map = new $className(['a', 'b', 'c']);
+        $result = $map->sort(fn (string $valueA, string $valueB, int $indexA, int $indexB) => $valueB <=> $valueA);
+        if ($map instanceof MutableSet) {
+            /** @psalm-suppress TypeDoesNotContainType */
+            self::assertSame($result, $map);
+        } else {
+            self::assertNotSame($result, $map);
+        }
+        self::assertSame(['c', 'b', 'a'], $result->toArray());
+        self::assertSame([0, 1, 2], iterator_to_array($result->keys()));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideSetClass
+     *
+     * @param class-string<AbstractSet<mixed>> $className
+     */
+    public function it_should_be_sorted_by_index(string $className): void
+    {
+        /** @var AbstractSet<string> $map */
+        $map = new $className(['a', 'b', 'c']);
+        $result = $map->sort(fn (string $valueA, string $valueB, int $indexA, int $indexB) => $indexB <=> $indexA);
+        if ($map instanceof MutableSet) {
+            /** @psalm-suppress TypeDoesNotContainType */
+            self::assertSame($result, $map);
+        } else {
+            self::assertNotSame($result, $map);
+        }
+        self::assertSame(['c', 'b', 'a'], $result->toArray());
+        self::assertSame([0, 1, 2], iterator_to_array($result->keys()));
+    }
 }
