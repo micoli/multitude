@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Micoli\Multitude\Tests;
 
 use Micoli\Multitude\Map\ImmutableMap;
+use Micoli\Multitude\Tests\Fixtures\MutableProjects;
 use Micoli\Multitude\Tests\Fixtures\Project;
 use Micoli\Multitude\Tests\Fixtures\Projects;
 use Micoli\Multitude\Tests\Fixtures\Tags;
@@ -57,5 +58,31 @@ class IntegrationTest extends TestCase
         self::assertCount(4, $map);
         $newMap = $map->improvedSet('NewType', new Project(10, new Tags(['tag4'])));
         self::assertCount(5, $newMap);
+    }
+
+    public function testItShouldFullyWorkWithObjectsAndMutable(): void
+    {
+        $map = new MutableProjects([
+            ['library', new Project(10, new Tags([]))],
+            ['projects', new Project(5, new Tags(['tag2']))],
+            ['gist', new Project(7, new Tags(['tag1', 'tag2']))],
+            ['repository', new Project(7, new Tags(['tag3']))],
+        ]);
+        $map->improvedSet('smallprojects', new Project(10, new Tags([])));
+        self::assertInstanceOf(MutableProjects::class, $map);
+        self::assertCount(5, $map);
+    }
+
+    public function testItShouldFullyWorkWithObjectsAndFromIterableMutable(): void
+    {
+        $map = MutableProjects::fromIterable([
+            'library' => new Project(10, new Tags([])),
+            'projects' => new Project(5, new Tags(['tag2'])),
+            'gist' => new Project(7, new Tags(['tag1', 'tag2'])),
+            'repository' => new Project(7, new Tags(['tag3'])),
+        ]);
+        $map->improvedSet('smallProjects', new Project(10, new Tags([])));
+        self::assertInstanceOf(MutableProjects::class, $map);
+        self::assertCount(5, $map);
     }
 }

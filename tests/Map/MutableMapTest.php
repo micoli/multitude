@@ -41,8 +41,10 @@ class MutableMapTest extends TestCase
         $map->set('2', '2 as string');
         $map->set(2, '2 as int');
         $map->removeKey(2);
+        $map->removeKey('b');
         self::assertSame('2 as string', $map->get('2'));
         self::assertNull($map->get(2));
+        self::assertSame([0, 1, 2], array_keys($map->getTuples()));
     }
 
     /**

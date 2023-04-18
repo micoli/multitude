@@ -5,7 +5,10 @@ A collection library for PHP.
 
 [![Build Status](https://github.com/micoli/Multitude/workflows/Tests/badge.svg)](https://github.com/micoli/Multitude/actions)
 [![Coverage Status](https://coveralls.io/repos/github/micoli/Multitude/badge.svg?branch=main)](https://coveralls.io/github/micoli/Multitude?branch=main)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
+[![Latest Stable Version](http://poser.pugx.org/micoli/multitude/v)](https://packagist.org/packages/micoli/multitude)
+[![Total Downloads](http://poser.pugx.org/micoli/multitude/downloads)](https://packagist.org/packages/micoli/multitude)
+[![Latest Unstable Version](http://poser.pugx.org/micoli/multitude/v/unstable)](https://packagist.org/packages/micoli/multitude) [![License](http://poser.pugx.org/micoli/multitude/license)](https://packagist.org/packages/micoli/multitude)
+[![PHP Version Require](http://poser.pugx.org/micoli/multitude/require/php)](https://packagist.org/packages/micoli/multitude)
 
 Two types of collections are available:
 - Sets (`MutableSet` and `ImmutableSet`), are sequences of unique values. Values can be of any types.
@@ -127,20 +130,14 @@ namespace Micoli\Multitude\Tests\Fixtures;
 use Micoli\Multitude\Map\ImmutableMap;
 
 /**
- * @template TKey of string
- * @template TValue of Project
- *
- * @extends ImmutableMap<TKey, TValue>
+ * @extends ImmutableMap<string, Project>
  */
 class Projects extends ImmutableMap
 {
     /**
      * Add or replace a value in the map
-     *
-     * @param TKey $newKey
-     * @param TValue $newValue
      */
-    public function improvedSet(mixed $newKey, mixed $newValue): static
+    public function improvedSet(string $newKey, Project $newValue): static
     {
         // do specific stuff, like logging or ther
         return $this->set($newKey, $newValue);
@@ -273,7 +270,7 @@ Apply a callback on set values
 Callback receive `$value` and `$index`
 ### `AbstractSet::get` <a id="AbstractSet__get"></a>
 
-`public function get(mixed $index, mixed $defaultValue = null): mixed`
+`public function get(int $index, mixed $defaultValue = null): mixed`
 
 Return a value in the set by index
 ### `AbstractSet::getIterator` <a id="AbstractSet__getIterator"></a>

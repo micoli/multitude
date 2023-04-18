@@ -57,6 +57,9 @@ jobs:
             - name: "Run Phpstan"
               run: vendor/bin/phpstan
 
+            - name: "Run phan"
+              run: XDEBUG_MODE=off PHAN_DISABLE_XDEBUG_WARN=1 vendor/bin/phan --allow-polyfill-parser
+
             - name: "Run tests"
               run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 

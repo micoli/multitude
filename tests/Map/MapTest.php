@@ -96,6 +96,24 @@ class MapTest extends TestCase
      *
      * @param class-string<AbstractMap<mixed, mixed>> $className
      */
+    public function it_should_remove_value_by_known_object_value(string $className): void
+    {
+        $baz = new Baz(1);
+        $baz2 = new Baz(1);
+        $map = $className::fromIterable(['a' => $baz, 'b' => 3, 3 => $baz, 'c' => 3, 'd' => 4, 'f' => 1]);
+        $newMap = $map->removeValue($baz);
+        self::assertCount(4, $newMap);
+        $newMap2 = $newMap->removeValue(3);
+        self::assertCount(2, $newMap2);
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
     public function it_should_be_counted(string $className): void
     {
         $map = new $className(['a' => 1, 'b' => 3, 3 => 2]);

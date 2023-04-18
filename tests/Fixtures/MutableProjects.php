@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Micoli\Multitude\Tests\Fixtures;
 
-use Micoli\Multitude\Map\ImmutableMap;
+use Micoli\Multitude\Map\MutableMap;
 
 /**
- * @extends ImmutableMap<string, Project>
+ * @extends MutableMap<string, Project>
  */
-class Projects extends ImmutableMap
+class MutableProjects extends MutableMap
 {
     /**
      * Add or replace a value in the map
      */
     public function improvedSet(string $newKey, Project $newValue): static
     {
-        // do specific stuff, like logging or ther
+        // do specific stuff, like logging or other
         return $this->set($newKey, $newValue);
     }
 }

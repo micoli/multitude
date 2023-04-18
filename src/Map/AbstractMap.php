@@ -59,10 +59,12 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     /**
      * Return a new instance from an array.
      *
-     * @template TK
-     * @template TV
+     * @template TK of TKey
+     * @template TV of TValue
      *
      * @param iterable<TK, TV> $values
+     *
+     * @phan-return static<TK, TV>
      */
     public static function fromIterable(iterable $values): static
     {
@@ -139,6 +141,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
         $keyIndex = $instance->keyIndex($searchedKey);
         if ($keyIndex !== -1) {
             unset($instance->tuples[$keyIndex]);
+            $instance->tuples = array_values($instance->tuples);
         }
 
         return $instance;
@@ -233,7 +236,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      * @param TKey $searchedKey
      * @param ?TValue $defaultValue
      *
-     * @return TValue|null
+     * @return ?TValue
      */
     public function get(mixed $searchedKey, mixed $defaultValue = null): mixed
     {
@@ -392,8 +395,8 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      *
      * @template TAccumulator
      *
-     * @param TAccumulator $accumulator
      * @param callable(TAccumulator, TValue, TKey): TAccumulator $callable
+     * @param TAccumulator $accumulator
      *
      * @return TAccumulator
      */

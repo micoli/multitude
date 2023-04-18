@@ -189,12 +189,11 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      *
      * if index is not found, default value is returned
      *
-     * @param int $index
      * @param ?TValue $defaultValue
      *
-     * @return TValue|null
+     * @return ?TValue
      */
-    public function get(mixed $index, mixed $defaultValue = null): mixed
+    public function get(int $index, mixed $defaultValue = null): mixed
     {
         if (array_key_exists($index, $this->values)) {
             return $this->values[$index];
