@@ -190,6 +190,22 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
+     * Return if a map contains a specific value
+     *
+     * @param TValue $searchedValue
+     */
+    public function hasValue(mixed $searchedValue): bool
+    {
+        foreach ($this->tuples as [$key, $value]) {
+            if ($value === $searchedValue) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Return if a map is empty
      */
     public function isEmpty(): bool
@@ -419,17 +435,30 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function filter(callable $callable): static
     {
         $instance = $this->getInstance();
-        $tuples = $this->tuples;
 
-        $instance->tuples = [];
+        $instance->tuples = $this->innerFilter($this->tuples, $callable);
+
+        return $instance;
+    }
+
+    /**
+     * @param list<array{TKey, TValue}> $tuples
+     * @param callable(TValue, TKey, int):bool $callable
+     *
+     * @return list<array{TKey, TValue}>
+     */
+    private function innerFilter(array $tuples, callable $callable): array
+    {
+        $result = [];
+
         foreach ($tuples as $index => [$key, $value]) {
             if (!$callable($value, $key, $index)) {
                 continue;
             }
-            $instance->tuples[] = [$key, $value];
+            $result[] = [$key, $value];
         }
 
-        return $instance;
+        return $result;
     }
 
     /**
@@ -469,6 +498,86 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
             fn (array $record) => [$record[1], $record[0]],
             $temp,
         ));
+
+        return $instance;
+    }
+
+    /**
+     * Return a map of all items where keys are not in argument map
+     *
+     * @param AbstractMap<TKey,TValue> $compared
+     */
+    public function keyDiff(AbstractMap $compared): static
+    {
+        $instance = clone $this;
+        $instance->tuples = $this->innerFilter(
+            $instance->tuples,
+            /**
+             * @param TValue $value
+             * @param TKey $key
+             */
+            fn (mixed $value, mixed $key, int $index) => !$compared->hasKey($key),
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Return a map of all items where keys are in arguments map
+     *
+     * @param AbstractMap<TKey,TValue> $compared
+     */
+    public function keyIntersect(AbstractMap $compared): static
+    {
+        $instance = clone $this;
+        $instance->tuples = $this->innerFilter(
+            $instance->tuples,
+            /**
+             * @param TValue $value
+             * @param TKey $key
+             */
+            fn (mixed $value, mixed $key, int $index) => $compared->hasKey($key),
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Return a map of all items where values are not in arguments map
+     *
+     * @param AbstractMap<TKey,TValue> $compared
+     */
+    public function valueDiff(AbstractMap $compared): static
+    {
+        $instance = clone $this;
+        $instance->tuples = $this->innerFilter(
+            $instance->tuples,
+            /**
+             * @param TValue $value
+             * @param TKey $key
+             */
+            fn (mixed $value, mixed $key, int $index) => !$compared->hasValue($value),
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Return a map of all items where values are in argument map
+     *
+     * @param AbstractMap<TKey,TValue> $compared
+     */
+    public function valueIntersect(AbstractMap $compared): static
+    {
+        $instance = clone $this;
+        $instance->tuples = $this->innerFilter(
+            $instance->tuples,
+            /**
+             * @param TValue $value
+             * @param TKey $key
+             */
+            fn (mixed $value, mixed $key, int $index) => $compared->hasValue($value),
+        );
 
         return $instance;
     }

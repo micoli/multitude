@@ -176,6 +176,57 @@ class Projects extends ImmutableMap
 
 # Available verbs
 
+## Verb parity
+
+[//]: <> (classes-methods-comparator-placeholder-start "Micoli\Multitude\Map\ImmutableMap,Micoli\Multitude\Map\MutableMap,Micoli\Multitude\Set\ImmutableSet,Micoli\Multitude\Set\MutableSet" "-")
+
+|  | **ImmutableMap** | **MutableMap** | **ImmutableSet** | **MutableSet** |
+|---| -- | -- | -- | -- |
+| __construct | [x] | [x] | [x] | [x] |
+| append |   |   | [x] | [x] |
+| count | [x] | [x] | [x] | [x] |
+| filter | [x] | [x] | [x] | [x] |
+| first | [x] | [x] | [x] | [x] |
+| forEach | [x] | [x] | [x] | [x] |
+| fromIterable | [x] | [x] |   |   |
+| get | [x] | [x] | [x] | [x] |
+| getIterator | [x] | [x] | [x] | [x] |
+| getTuples | [x] | [x] |   |   |
+| hasIndex |   |   | [x] | [x] |
+| hasKey | [x] | [x] |   |   |
+| hasValue | [x] | [x] | [x] | [x] |
+| indexDiff |   |   | [x] | [x] |
+| indexIntersect |   |   | [x] | [x] |
+| isEmpty | [x] | [x] | [x] | [x] |
+| keyDiff | [x] | [x] |   |   |
+| keyIntersect | [x] | [x] |   |   |
+| keys | [x] | [x] | [x] | [x] |
+| last | [x] | [x] | [x] | [x] |
+|  | **ImmutableMap** | **MutableMap** | **ImmutableSet** | **MutableSet** |
+| map | [x] | [x] | [x] | [x] |
+| offsetExists | [x] | [x] |   |   |
+| offsetGet | [x] | [x] |   |   |
+| offsetSet | [x] | [x] |   |   |
+| offsetUnset | [x] | [x] |   |   |
+| reduce | [x] | [x] | [x] | [x] |
+| remove |   |   | [x] | [x] |
+| removeKey | [x] | [x] |   |   |
+| removeValue | [x] | [x] |   |   |
+| set | [x] | [x] |   |   |
+| slice | [x] | [x] | [x] | [x] |
+| sort | [x] | [x] | [x] | [x] |
+| toArray | [x] | [x] | [x] | [x] |
+| toImmutable |   | [x] |   | [x] |
+| toMutable | [x] |   | [x] |   |
+| valueDiff | [x] | [x] | [x] | [x] |
+| valueIntersect | [x] | [x] | [x] | [x] |
+| values | [x] | [x] | [x] | [x] |
+
+
+
+[//]: <> (classes-methods-comparator-placeholder-end)
+
+
 ## AbstractSet
 
 [//]: <> (class-method-summary-placeholder-start "Micoli\Multitude\Set\AbstractSet" " - ")
@@ -188,7 +239,10 @@ class Projects extends ImmutableMap
  -  [forEach](#user-content-AbstractSet__forEach)
  -  [get](#user-content-AbstractSet__get)
  -  [getIterator](#user-content-AbstractSet__getIterator)
+ -  [hasIndex](#user-content-AbstractSet__hasIndex)
  -  [hasValue](#user-content-AbstractSet__hasValue)
+ -  [indexDiff](#user-content-AbstractSet__indexDiff)
+ -  [indexIntersect](#user-content-AbstractSet__indexIntersect)
  -  [isEmpty](#user-content-AbstractSet__isEmpty)
  -  [keys](#user-content-AbstractSet__keys)
  -  [last](#user-content-AbstractSet__last)
@@ -198,6 +252,8 @@ class Projects extends ImmutableMap
  -  [slice](#user-content-AbstractSet__slice)
  -  [sort](#user-content-AbstractSet__sort)
  -  [toArray](#user-content-AbstractSet__toArray)
+ -  [valueDiff](#user-content-AbstractSet__valueDiff)
+ -  [valueIntersect](#user-content-AbstractSet__valueIntersect)
  -  [values](#user-content-AbstractSet__values)
 
 [//]: <> (class-method-summary-placeholder-end)
@@ -216,7 +272,10 @@ class Projects extends ImmutableMap
  -  [getIterator](#user-content-AbstractMap__getIterator)
  -  [getTuples](#user-content-AbstractMap__getTuples)
  -  [hasKey](#user-content-AbstractMap__hasKey)
+ -  [hasValue](#user-content-AbstractMap__hasValue)
  -  [isEmpty](#user-content-AbstractMap__isEmpty)
+ -  [keyDiff](#user-content-AbstractMap__keyDiff)
+ -  [keyIntersect](#user-content-AbstractMap__keyIntersect)
  -  [keys](#user-content-AbstractMap__keys)
  -  [last](#user-content-AbstractMap__last)
  -  [map](#user-content-AbstractMap__map)
@@ -231,6 +290,8 @@ class Projects extends ImmutableMap
  -  [slice](#user-content-AbstractMap__slice)
  -  [sort](#user-content-AbstractMap__sort)
  -  [toArray](#user-content-AbstractMap__toArray)
+ -  [valueDiff](#user-content-AbstractMap__valueDiff)
+ -  [valueIntersect](#user-content-AbstractMap__valueIntersect)
  -  [values](#user-content-AbstractMap__values)
 
 [//]: <> (class-method-summary-placeholder-end)
@@ -280,11 +341,26 @@ Return a value in the set by index
 `public function getIterator(): Traversable`
 
 Return an iterator for values
+### `AbstractSet::hasIndex` <a id="AbstractSet__hasIndex"></a>
+
+`public function hasIndex(int $index): bool`
+
+Return if a set contains an index
 ### `AbstractSet::hasValue` <a id="AbstractSet__hasValue"></a>
 
 `public function hasValue(mixed $searchedValue): bool`
 
 Return if a set contains a value
+### `AbstractSet::indexDiff` <a id="AbstractSet__indexDiff"></a>
+
+`public function indexDiff(AbstractSet $compared): static`
+
+Return a set of all items where keys are not in argument set
+### `AbstractSet::indexIntersect` <a id="AbstractSet__indexIntersect"></a>
+
+`public function indexIntersect(AbstractSet $compared): static`
+
+Return a map of all items where keys are in arguments map
 ### `AbstractSet::isEmpty` <a id="AbstractSet__isEmpty"></a>
 
 `public function isEmpty(): bool`
@@ -338,6 +414,16 @@ and must return -1,0,1 as spaceship operator
 `public function toArray(): array`
 
 Return an array representing the values
+### `AbstractSet::valueDiff` <a id="AbstractSet__valueDiff"></a>
+
+`public function valueDiff(AbstractSet $compared): static`
+
+Return a Set of all items where values are not in argument set
+### `AbstractSet::valueIntersect` <a id="AbstractSet__valueIntersect"></a>
+
+`public function valueIntersect(AbstractSet $compared): static`
+
+Return a set of all items where values are in argument set
 ### `AbstractSet::values` <a id="AbstractSet__values"></a>
 
 `public function values(): Generator`
@@ -400,11 +486,26 @@ Return an iterator for values by keys
 `public function hasKey(mixed $searchedKey): bool`
 
 Return if a map contains a specific key
+### `AbstractMap::hasValue` <a id="AbstractMap__hasValue"></a>
+
+`public function hasValue(mixed $searchedValue): bool`
+
+Return if a map contains a specific value
 ### `AbstractMap::isEmpty` <a id="AbstractMap__isEmpty"></a>
 
 `public function isEmpty(): bool`
 
 Return if a map is empty
+### `AbstractMap::keyDiff` <a id="AbstractMap__keyDiff"></a>
+
+`public function keyDiff(AbstractMap $compared): static`
+
+Return a map of all items where keys are not in argument map
+### `AbstractMap::keyIntersect` <a id="AbstractMap__keyIntersect"></a>
+
+`public function keyIntersect(AbstractMap $compared): static`
+
+Return a map of all items where keys are in arguments map
 ### `AbstractMap::keys` <a id="AbstractMap__keys"></a>
 
 `public function keys(): Generator`
@@ -481,6 +582,16 @@ and must return -1,0,1 as spaceship operator
 `public function toArray(): array`
 
 Return an array representing the values
+### `AbstractMap::valueDiff` <a id="AbstractMap__valueDiff"></a>
+
+`public function valueDiff(AbstractMap $compared): static`
+
+Return a map of all items where values are not in arguments map
+### `AbstractMap::valueIntersect` <a id="AbstractMap__valueIntersect"></a>
+
+`public function valueIntersect(AbstractMap $compared): static`
+
+Return a map of all items where values are in argument map
 ### `AbstractMap::values` <a id="AbstractMap__values"></a>
 
 `public function values(): Generator`

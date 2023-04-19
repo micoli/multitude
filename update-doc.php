@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 include 'vendor/autoload.php';
+
 use phpDocumentor\Reflection\DocBlockFactory;
 
 class MarkdownUpdater
@@ -23,6 +24,7 @@ class MarkdownUpdater
         $content = $this->parseTags($content, 'class-method-summary', $this->getClassMethodSummary(...));
         $content = $this->parseTags($content, 'class-method-code', $this->getClassMethodCode(...));
         $content = $this->parseTags($content, 'class-method-documentation', $this->getClassMethodAnnotations(...));
+        $content = $this->parseTags($content, 'classes-methods-comparator', $this->getClassesMethodsComparator(...));
         $content = $this->parseTags($content, 'include', $this->getInclude(...));
 
         file_put_contents($filename, $content);
@@ -32,7 +34,7 @@ class MarkdownUpdater
     {
         return preg_replace_callback(
             sprintf('!\[//]: <> \(%s-placeholder-start "(.*?)" "(.*?)"\)(.*?)\[//]: <> \(%s-placeholder-end\)!sim', $tag, $tag),
-            fn (array $match) => implode(PHP_EOL, [
+            fn(array $match) => implode(PHP_EOL, [
                 sprintf('[//]: <> (%s-placeholder-start "%s" "%s")', $tag, $match[1], $match[2]),
                 $executor($match[1], $match[2]),
                 '',
@@ -106,6 +108,43 @@ class MarkdownUpdater
             {$body}
             ```
             BLOCK;
+    }
+
+    private function getClassesMethodsComparator(string $classNames, string $prefix): string
+    {
+        $methodNames = [];
+        $classNames = explode(',', $classNames);
+        $classShortNames = [];
+        foreach ($classNames as $className) {
+            $reflectionClass = new ReflectionClass($className);
+            $classShortNames[] = $reflectionClass->getShortName();
+        }
+        foreach ($classNames as $className) {
+            $reflectionClass = new ReflectionClass($className);
+            foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                $shortName = $reflectionClass->getShortName();
+                $methodName = $method->getName();
+                if (!array_key_exists($methodName, $methodNames)) {
+                    $methodNames[$methodName] = array_fill_keys($classShortNames, ' ');
+                }
+                $methodNames[$methodName][$shortName] = '[x]';
+            }
+        }
+        ksort($methodNames);
+        $line = 0;
+        $result = '';
+        foreach ($methodNames as $methodName => $availibility) {
+            if ($line % 20 === 0) {
+                $result .= '|  | **' . implode('** | **', array_keys($availibility)) . '** |' . PHP_EOL;
+            }
+            if ($line === 0) {
+                $result .= '|---| ' . implode(' | ', array_map(fn($tmp) => '--', $availibility)) . ' |' . PHP_EOL;
+            }
+            $result .= '| ' . $methodName . ' | ' . implode(' | ', $availibility) . ' |' . PHP_EOL;
+            $line++;
+        }
+
+        return PHP_EOL . $result . PHP_EOL;
     }
 
     private function getInclude(string $filename, string $prefix): string

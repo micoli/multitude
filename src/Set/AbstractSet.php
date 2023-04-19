@@ -157,6 +157,14 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     }
 
     /**
+     * Return if a set contains an index
+     */
+    public function hasIndex(int $index): bool
+    {
+        return array_key_exists($index, $this->values);
+    }
+
+    /**
      * Return if a set is empty
      */
     public function isEmpty(): bool
@@ -320,17 +328,30 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     public function filter(callable $callable): static
     {
         $instance = $this->getInstance();
-        $values = $this->values;
 
-        $instance->values = [];
+        $instance->values = $this->innerFilter($this->values, $callable);
+
+        return $instance;
+    }
+
+    /**
+     * @param list<TValue> $values
+     * @param callable(TValue, int):bool $callable
+     *
+     * @return list<TValue>
+     */
+    private function innerFilter(array $values, callable $callable): array
+    {
+        $result = [];
+
         foreach ($values as $index => $value) {
             if (!$callable($value, $index)) {
                 continue;
             }
-            $instance->values[] = $value;
+            $result[] = $value;
         }
 
-        return $instance;
+        return $result;
     }
 
     /**
@@ -369,6 +390,82 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
             fn (array $record) => $record[0],
             $temp,
         ));
+
+        return $instance;
+    }
+
+    /**
+     * Return a set of all items where keys are not in argument set
+     *
+     * @param AbstractSet<TValue> $compared
+     */
+    public function indexDiff(AbstractSet $compared): static
+    {
+        $instance = clone $this;
+        $instance->values = $this->innerFilter(
+            $instance->values,
+            /**
+             * @param TValue $value
+             */
+            fn (mixed $value, int $index) => !$compared->hasIndex($index),
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Return a map of all items where keys are in arguments map
+     *
+     * @param AbstractSet<TValue> $compared
+     */
+    public function indexIntersect(AbstractSet $compared): static
+    {
+        $instance = clone $this;
+        $instance->values = $this->innerFilter(
+            $instance->values,
+            /**
+             * @param TValue $value
+             */
+            fn (mixed $value, int $index) => $compared->hasIndex($index),
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Return a Set of all items where values are not in argument set
+     *
+     * @param AbstractSet<TValue> $compared
+     */
+    public function valueDiff(AbstractSet $compared): static
+    {
+        $instance = clone $this;
+        $instance->values = $this->innerFilter(
+            $instance->values,
+            /**
+             * @param TValue $value
+             */
+            fn (mixed $value, int $index) => !$compared->hasValue($value),
+        );
+
+        return $instance;
+    }
+
+    /**
+     * Return a set of all items where values are in argument set
+     *
+     * @param AbstractSet<TValue> $compared
+     */
+    public function valueIntersect(AbstractSet $compared): static
+    {
+        $instance = clone $this;
+        $instance->values = $this->innerFilter(
+            $instance->values,
+            /**
+             * @param TValue $value
+             */
+            fn (mixed $value, int $index) => $compared->hasValue($value),
+        );
 
         return $instance;
     }

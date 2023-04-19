@@ -52,6 +52,21 @@ class MapTest extends TestCase
      *
      * @param class-string<AbstractMap<mixed, mixed>> $className
      */
+    public function it_should_validate_has_value(string $className): void
+    {
+        $map = new $className([['a', 1], ['b', 3], [3, 'a']]);
+        self::assertTrue($map->hasValue(1));
+        self::assertFalse($map->hasValue('1'));
+        self::assertFalse($map->hasValue(4));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
     public function it_should_not_convert_to_array_with_null_key(string $className): void
     {
         $map = new $className([['a', 1], [null, 3], [3, 'a']]);
@@ -442,5 +457,77 @@ class MapTest extends TestCase
         }
         self::assertSame(['c' => 3, 'b' => 2, 'a' => 1], $result->toArray());
         self::assertSame([0, 1, 2], array_keys($result->getTuples()));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_get_a_diff_by_key(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        /** @var AbstractMap<string, int> $compared */
+        $compared = $className::fromIterable(['a' => 22, 'bb' => 211, 'c' => 311]);
+
+        self::assertSame(['b' => 2], $map->keyDiff($compared)->toArray());
+        self::assertSame([], $map->keyDiff($map)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_get_an_intersect_by_key(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        /** @var AbstractMap<string, int> $compared */
+        $compared = $className::fromIterable(['a' => 22, 'bb' => 211, 'c' => 311]);
+
+        self::assertSame(['a' => 1, 'c' => 3], $map->keyIntersect($compared)->toArray());
+        self::assertSame($map->toArray(), $map->keyIntersect($map)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_get_a_diff_by_value(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        /** @var AbstractMap<string, int> $compared */
+        $compared = $className::fromIterable(['a' => 1, 'bb' => 22, 'd' => 3]);
+
+        self::assertSame(['b' => 2], $map->valueDiff($compared)->toArray());
+        self::assertSame([], $map->valueDiff($map)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<mixed, mixed>> $className
+     */
+    public function it_should_get_an_intersect_by_value(string $className): void
+    {
+        /** @var AbstractMap<string, int> $map */
+        $map = $className::fromIterable(['a' => 1, 'b' => 2, 'c' => 3]);
+        /** @var AbstractMap<string, int> $compared */
+        $compared = $className::fromIterable(['a' => 1, 'bb' => 22, 'd' => 3]);
+
+        self::assertSame(['a' => 1, 'c' => 3], $map->valueIntersect($compared)->toArray());
+        self::assertSame($map->toArray(), $map->valueIntersect($map)->toArray());
     }
 }

@@ -41,6 +41,10 @@ class SetTest extends TestCase
         self::assertCount(3, $set);
         self::assertSame(3, $set->get(1));
         self::assertSame(666, $set->get(80, 666));
+        self::assertTrue($set->hasIndex(1));
+        self::assertTrue($set->hasIndex(2));
+        self::assertFalse($set->hasIndex(-1));
+        self::assertFalse($set->hasIndex(666));
     }
 
     /**
@@ -313,5 +317,77 @@ class SetTest extends TestCase
         }
         self::assertSame(['c', 'b', 'a'], $result->toArray());
         self::assertSame([0, 1, 2], iterator_to_array($result->keys()));
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideSetClass
+     *
+     * @param class-string<AbstractSet<mixed>> $className
+     */
+    public function it_should_get_a_diff_by_key(string $className): void
+    {
+        /** @var AbstractSet<int> $set */
+        $set = new $className([1, 3, 4, 5, 10]);
+        /** @var AbstractSet<int> $compared */
+        $compared = new $className([2, 1, 4, 5]);
+
+        self::assertSame([10], $set->indexDiff($compared)->toArray());
+        self::assertSame([], $set->indexDiff($set)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideSetClass
+     *
+     * @param class-string<AbstractSet<mixed>> $className
+     */
+    public function it_should_get_an_intersect_by_key(string $className): void
+    {
+        /** @var AbstractSet<int> $set */
+        $set = new $className([1, 3, 4, 5, 10]);
+        /** @var AbstractSet<int> $compared */
+        $compared = new $className([2, 1, 4, 5]);
+
+        self::assertSame([1, 3, 4, 5], $set->indexIntersect($compared)->toArray());
+        self::assertSame($set->toArray(), $set->indexIntersect($set)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideSetClass
+     *
+     * @param class-string<AbstractSet<mixed>> $className
+     */
+    public function it_should_get_a_diff_by_value(string $className): void
+    {
+        /** @var AbstractSet<int> $set */
+        $set = new $className([1, 3, 4, 5, 10]);
+        /** @var AbstractSet<int> $compared */
+        $compared = new $className([2, 1, 4, 5]);
+
+        self::assertSame([3, 10], $set->valueDiff($compared)->toArray());
+        self::assertSame([], $set->valueDiff($set)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideSetClass
+     *
+     * @param class-string<AbstractSet<mixed>> $className
+     */
+    public function it_should_get_an_intersect_by_value(string $className): void
+    {
+        /** @var AbstractSet<int> $set */
+        $set = new $className([1, 3, 4, 5, 10]);
+        /** @var AbstractSet<int> $compared */
+        $compared = new $className([2, 1, 4, 5]);
+
+        self::assertSame([1, 4, 5], $set->valueIntersect($compared)->toArray());
+        self::assertSame($set->toArray(), $set->valueIntersect($set)->toArray());
     }
 }
