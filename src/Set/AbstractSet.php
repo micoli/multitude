@@ -14,6 +14,12 @@ use Micoli\Multitude\Exception\NotFoundException;
 use Micoli\Multitude\Exception\ValueAlreadyPresentException;
 use Micoli\Multitude\ImmutableInterface;
 use Micoli\Multitude\MutableInterface;
+use Micoli\Multitude\Set\Operation\Filter;
+use Micoli\Multitude\Set\Operation\KeyDiff;
+use Micoli\Multitude\Set\Operation\KeyIntersect;
+use Micoli\Multitude\Set\Operation\Sort;
+use Micoli\Multitude\Set\Operation\ValueDiff;
+use Micoli\Multitude\Set\Operation\ValueIntersect;
 use Traversable;
 
 /**
@@ -69,8 +75,12 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     /**
      * @return static
      */
-    private function getInstance()
+    private function getInstance(bool $forceNew = false)
     {
+        if ($forceNew) {
+            return clone $this;
+        }
+
         return $this->isMutable ? $this : clone ($this);
     }
 
@@ -329,29 +339,9 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     {
         $instance = $this->getInstance();
 
-        $instance->values = $this->innerFilter($this->values, $callable);
+        $instance->values = (new Filter())($instance->values, $callable);
 
         return $instance;
-    }
-
-    /**
-     * @param list<TValue> $values
-     * @param callable(TValue, int):bool $callable
-     *
-     * @return list<TValue>
-     */
-    private function innerFilter(array $values, callable $callable): array
-    {
-        $result = [];
-
-        foreach ($values as $index => $value) {
-            if (!$callable($value, $index)) {
-                continue;
-            }
-            $result[] = $value;
-        }
-
-        return $result;
     }
 
     /**
@@ -366,30 +356,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     public function sort(callable $callable): static
     {
         $instance = $this->getInstance();
-
-        /** @var list<array{TValue, int}> $temp */
-        $temp = array_map(
-            fn ($value, $index) => [$value, $index],
-            $instance->values,
-            array_keys($instance->values),
-        );
-        uasort(
-            $temp,
-            /**
-             * @param array{TValue, int} $valueA
-             * @param array{TValue, int} $valueB
-             */
-            fn (array $valueA, array $valueB) => $callable(
-                $valueA[0],
-                $valueB[0],
-                $valueA[1],
-                $valueB[1],
-            ),
-        );
-        $instance->values = array_values(array_map(
-            fn (array $record) => $record[0],
-            $temp,
-        ));
+        $instance->values = (new Sort())($instance->values, $callable);
 
         return $instance;
     }
@@ -401,16 +368,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function indexDiff(AbstractSet $compared): static
     {
-        $instance = clone $this;
-        $instance->values = $this->innerFilter(
-            $instance->values,
-            /**
-             * @param TValue $value
-             */
-            fn (mixed $value, int $index) => !$compared->hasIndex($index),
-        );
-
-        return $instance;
+        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new KeyDiff())($instance->values, $compared));
     }
 
     /**
@@ -420,16 +378,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function indexIntersect(AbstractSet $compared): static
     {
-        $instance = clone $this;
-        $instance->values = $this->innerFilter(
-            $instance->values,
-            /**
-             * @param TValue $value
-             */
-            fn (mixed $value, int $index) => $compared->hasIndex($index),
-        );
-
-        return $instance;
+        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new KeyIntersect())($instance->values, $compared));
     }
 
     /**
@@ -439,16 +388,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function valueDiff(AbstractSet $compared): static
     {
-        $instance = clone $this;
-        $instance->values = $this->innerFilter(
-            $instance->values,
-            /**
-             * @param TValue $value
-             */
-            fn (mixed $value, int $index) => !$compared->hasValue($value),
-        );
-
-        return $instance;
+        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new ValueDiff())($instance->values, $compared));
     }
 
     /**
@@ -458,16 +398,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function valueIntersect(AbstractSet $compared): static
     {
-        $instance = clone $this;
-        $instance->values = $this->innerFilter(
-            $instance->values,
-            /**
-             * @param TValue $value
-             */
-            fn (mixed $value, int $index) => $compared->hasValue($value),
-        );
-
-        return $instance;
+        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new ValueIntersect())($instance->values, $compared));
     }
 
     /**
@@ -495,5 +426,21 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
         }
 
         return $this;
+    }
+
+    /**
+     * @internal
+     *
+     * @param callable(static): list<TValue> $callable
+     *
+     * @phan-suppress PhanUnextractableAnnotationElementName, PhanUnextractableAnnotationSuffix
+     */
+    private function applyCallableToValues(callable $callable): static
+    {
+        $instance = $this->getInstance(true);
+        $values = $callable($instance);
+        $instance->values = $values;
+
+        return $instance;
     }
 }

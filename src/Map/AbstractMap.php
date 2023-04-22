@@ -15,6 +15,12 @@ use Micoli\Multitude\Exception\InvalidArgumentException;
 use Micoli\Multitude\Exception\LogicException;
 use Micoli\Multitude\Exception\OutOfBoundsException;
 use Micoli\Multitude\ImmutableInterface;
+use Micoli\Multitude\Map\Operation\Filter;
+use Micoli\Multitude\Map\Operation\KeyDiff;
+use Micoli\Multitude\Map\Operation\KeyIntersect;
+use Micoli\Multitude\Map\Operation\Sort;
+use Micoli\Multitude\Map\Operation\ValueDiff;
+use Micoli\Multitude\Map\Operation\ValueIntersect;
 use Micoli\Multitude\MutableInterface;
 use Traversable;
 
@@ -97,8 +103,12 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
         return !$this->isMutable;
     }
 
-    private function getInstance(): static
+    private function getInstance(bool $forceNew = false): static
     {
+        if ($forceNew) {
+            return clone $this;
+        }
+
         return $this->isMutable ? $this : clone ($this);
     }
 
@@ -435,30 +445,9 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function filter(callable $callable): static
     {
         $instance = $this->getInstance();
-
-        $instance->tuples = $this->innerFilter($this->tuples, $callable);
+        $instance->tuples = (new Filter())($instance->tuples, $callable);
 
         return $instance;
-    }
-
-    /**
-     * @param list<array{TKey, TValue}> $tuples
-     * @param callable(TValue, TKey, int):bool $callable
-     *
-     * @return list<array{TKey, TValue}>
-     */
-    private function innerFilter(array $tuples, callable $callable): array
-    {
-        $result = [];
-
-        foreach ($tuples as $index => [$key, $value]) {
-            if (!$callable($value, $key, $index)) {
-                continue;
-            }
-            $result[] = [$key, $value];
-        }
-
-        return $result;
     }
 
     /**
@@ -473,31 +462,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function sort(callable $callable): static
     {
         $instance = $this->getInstance();
-
-        $temp = array_map(
-            fn ($tuple, $index) => [$tuple[1], $tuple[0], $index],
-            $instance->tuples,
-            array_keys($instance->tuples),
-        );
-        uasort(
-            $temp,
-            /**
-             * @param array{TValue, TKey, int} $valueA
-             * @param array{TValue, TKey, int} $valueB
-             */
-            fn (array $valueA, array $valueB) => $callable(
-                $valueA[0],
-                $valueB[0],
-                $valueA[1],
-                $valueB[1],
-                $valueA[2],
-                $valueB[2],
-            ),
-        );
-        $instance->tuples = array_values(array_map(
-            fn (array $record) => [$record[1], $record[0]],
-            $temp,
-        ));
+        $instance->tuples = (new Sort())($instance->tuples, $callable);
 
         return $instance;
     }
@@ -509,17 +474,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function keyDiff(AbstractMap $compared): static
     {
-        $instance = clone $this;
-        $instance->tuples = $this->innerFilter(
-            $instance->tuples,
-            /**
-             * @param TValue $value
-             * @param TKey $key
-             */
-            fn (mixed $value, mixed $key, int $index) => !$compared->hasKey($key),
-        );
-
-        return $instance;
+        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new KeyDiff())($instance->tuples, $compared));
     }
 
     /**
@@ -529,17 +484,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function keyIntersect(AbstractMap $compared): static
     {
-        $instance = clone $this;
-        $instance->tuples = $this->innerFilter(
-            $instance->tuples,
-            /**
-             * @param TValue $value
-             * @param TKey $key
-             */
-            fn (mixed $value, mixed $key, int $index) => $compared->hasKey($key),
-        );
-
-        return $instance;
+        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new KeyIntersect())($instance->tuples, $compared));
     }
 
     /**
@@ -549,17 +494,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function valueDiff(AbstractMap $compared): static
     {
-        $instance = clone $this;
-        $instance->tuples = $this->innerFilter(
-            $instance->tuples,
-            /**
-             * @param TValue $value
-             * @param TKey $key
-             */
-            fn (mixed $value, mixed $key, int $index) => !$compared->hasValue($value),
-        );
-
-        return $instance;
+        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new ValueDiff())($instance->tuples, $compared));
     }
 
     /**
@@ -569,17 +504,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function valueIntersect(AbstractMap $compared): static
     {
-        $instance = clone $this;
-        $instance->tuples = $this->innerFilter(
-            $instance->tuples,
-            /**
-             * @param TValue $value
-             * @param TKey $key
-             */
-            fn (mixed $value, mixed $key, int $index) => $compared->hasValue($value),
-        );
-
-        return $instance;
+        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new ValueIntersect())($instance->tuples, $compared));
     }
 
     /**
@@ -610,5 +535,21 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
         }
 
         return $this;
+    }
+
+    /**
+     * @internal
+     *
+     * @param callable(static): list<array{TKey,TValue}> $callable
+     *
+     * @phan-suppress PhanUnextractableAnnotationElementName, PhanUnextractableAnnotationSuffix
+     */
+    private function applyCallableToTuples(callable $callable): static
+    {
+        $instance = $this->getInstance(true);
+        $tuples = $callable($instance);
+        $instance->tuples = $tuples;
+
+        return $instance;
     }
 }
