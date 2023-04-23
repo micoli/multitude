@@ -368,7 +368,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function indexDiff(AbstractSet $compared): static
     {
-        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new KeyDiff())($instance->values, $compared));
+        return $this->apply(fn (AbstractSet $instance) => (new KeyDiff())($instance->values, $compared));
     }
 
     /**
@@ -378,7 +378,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function indexIntersect(AbstractSet $compared): static
     {
-        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new KeyIntersect())($instance->values, $compared));
+        return $this->apply(fn (AbstractSet $instance) => (new KeyIntersect())($instance->values, $compared));
     }
 
     /**
@@ -388,7 +388,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function valueDiff(AbstractSet $compared): static
     {
-        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new ValueDiff())($instance->values, $compared));
+        return $this->apply(fn (AbstractSet $instance) => (new ValueDiff())($instance->values, $compared));
     }
 
     /**
@@ -398,7 +398,7 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
      */
     public function valueIntersect(AbstractSet $compared): static
     {
-        return $this->applyCallableToValues(fn (AbstractSet $instance) => (new ValueIntersect())($instance->values, $compared));
+        return $this->apply(fn (AbstractSet $instance) => (new ValueIntersect())($instance->values, $compared));
     }
 
     /**
@@ -429,13 +429,13 @@ class AbstractSet extends AbstractMultitude implements IteratorAggregate, Counta
     }
 
     /**
-     * @internal
+     * Replace all values by applying a callback to the current instance
      *
      * @param callable(static): list<TValue> $callable
      *
      * @phan-suppress PhanUnextractableAnnotationElementName, PhanUnextractableAnnotationSuffix
      */
-    private function applyCallableToValues(callable $callable): static
+    public function apply(callable $callable): static
     {
         $instance = $this->getInstance(true);
         $values = $callable($instance);

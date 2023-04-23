@@ -474,7 +474,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function keyDiff(AbstractMap $compared): static
     {
-        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new KeyDiff())($instance->tuples, $compared));
+        return $this->apply(fn (AbstractMap $instance) => (new KeyDiff())($instance->tuples, $compared));
     }
 
     /**
@@ -484,7 +484,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function keyIntersect(AbstractMap $compared): static
     {
-        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new KeyIntersect())($instance->tuples, $compared));
+        return $this->apply(fn (AbstractMap $instance) => (new KeyIntersect())($instance->tuples, $compared));
     }
 
     /**
@@ -494,7 +494,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function valueDiff(AbstractMap $compared): static
     {
-        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new ValueDiff())($instance->tuples, $compared));
+        return $this->apply(fn (AbstractMap $instance) => (new ValueDiff())($instance->tuples, $compared));
     }
 
     /**
@@ -504,7 +504,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function valueIntersect(AbstractMap $compared): static
     {
-        return $this->applyCallableToTuples(fn (AbstractMap $instance) => (new ValueIntersect())($instance->tuples, $compared));
+        return $this->apply(fn (AbstractMap $instance) => (new ValueIntersect())($instance->tuples, $compared));
     }
 
     /**
@@ -538,13 +538,13 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     }
 
     /**
-     * @internal
+     * Replace all values by applying a callback to the current instance
      *
      * @param callable(static): list<array{TKey,TValue}> $callable
      *
      * @phan-suppress PhanUnextractableAnnotationElementName, PhanUnextractableAnnotationSuffix
      */
-    private function applyCallableToTuples(callable $callable): static
+    public function apply(callable $callable): static
     {
         $instance = $this->getInstance(true);
         $tuples = $callable($instance);

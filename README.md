@@ -184,6 +184,7 @@ class Projects extends ImmutableMap
 |---| -- | -- | -- | -- |
 | __construct | [x] | [x] | [x] | [x] |
 | append |   |   | [x] | [x] |
+| apply | [x] | [x] | [x] | [x] |
 | count | [x] | [x] | [x] | [x] |
 | filter | [x] | [x] | [x] | [x] |
 | first | [x] | [x] | [x] | [x] |
@@ -201,8 +202,8 @@ class Projects extends ImmutableMap
 | keyDiff | [x] | [x] |   |   |
 | keyIntersect | [x] | [x] |   |   |
 | keys | [x] | [x] | [x] | [x] |
-| last | [x] | [x] | [x] | [x] |
 |  | **ImmutableMap** | **MutableMap** | **ImmutableSet** | **MutableSet** |
+| last | [x] | [x] | [x] | [x] |
 | map | [x] | [x] | [x] | [x] |
 | offsetExists | [x] | [x] |   |   |
 | offsetGet | [x] | [x] |   |   |
@@ -233,6 +234,7 @@ class Projects extends ImmutableMap
 
  -  [__construct](#user-content-AbstractSet____construct)
  -  [append](#user-content-AbstractSet__append)
+ -  [apply](#user-content-AbstractSet__apply)
  -  [count](#user-content-AbstractSet__count)
  -  [filter](#user-content-AbstractSet__filter)
  -  [first](#user-content-AbstractSet__first)
@@ -263,6 +265,7 @@ class Projects extends ImmutableMap
 [//]: <> (class-method-summary-placeholder-start "Micoli\Multitude\Map\AbstractMap" " - ")
 
  -  [__construct](#user-content-AbstractMap____construct)
+ -  [apply](#user-content-AbstractMap__apply)
  -  [count](#user-content-AbstractMap__count)
  -  [filter](#user-content-AbstractMap__filter)
  -  [first](#user-content-AbstractMap__first)
@@ -309,6 +312,11 @@ class Projects extends ImmutableMap
 `public function append(mixed $newValue, bool $throw = true): static`
 
 Append a value at the end of the set
+### `AbstractSet::apply` <a id="AbstractSet__apply"></a>
+
+`public function apply(callable $callable): static`
+
+Replace all values by applying a callback to the current instance
 ### `AbstractSet::count` <a id="AbstractSet__count"></a>
 
 `public function count(): int`
@@ -441,6 +449,11 @@ Return an iterator of values
 `public function __construct(array $tuples = [])`
 
 
+### `AbstractMap::apply` <a id="AbstractMap__apply"></a>
+
+`public function apply(callable $callable): static`
+
+Replace all values by applying a callback to the current instance
 ### `AbstractMap::count` <a id="AbstractMap__count"></a>
 
 `public function count(): int`
