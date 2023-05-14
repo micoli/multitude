@@ -14,7 +14,8 @@
         "symfony/var-dumper": "^6.2",
         "php-coveralls/php-coveralls": "^0.1.0",
         "phpstan/phpstan": "^1.10",
-        "phan/phan": "^5.4"
+        "phan/phan": "^5.4",
+        "ramsey/uuid": "^4.7"
     },
     "autoload": {
         "psr-4": {

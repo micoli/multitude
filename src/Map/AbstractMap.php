@@ -22,6 +22,7 @@ use Micoli\Multitude\Map\Operation\Sort;
 use Micoli\Multitude\Map\Operation\ValueDiff;
 use Micoli\Multitude\Map\Operation\ValueIntersect;
 use Micoli\Multitude\MutableInterface;
+use Stringable;
 use Traversable;
 
 /**
@@ -236,22 +237,34 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     /**
      * Return an array representing the values
      *
-     * @return array<TKey, TValue>
+     * @return array<string|int, TValue>
      */
     public function toArray(): array
     {
         $values = [];
         foreach ($this->tuples as [$key,$value]) {
-            if ($key === null) {
-                throw new GenericException('Invalid array key');
-            }
-            if (!is_int($key) && !is_string($key)) {
-                throw new GenericException('Invalid array key');
-            }
-            $values[$key] = $value;
+            $values[$this->convertToKey($key)] = $value;
         }
 
         return $values;
+    }
+
+    private function convertToKey(mixed $key): int|string
+    {
+        if (is_int($key) || is_string($key)) {
+            return $key;
+        }
+        if ($key === null) {
+            throw new GenericException('Invalid array key');
+        }
+        if (is_object($key)) {
+            if (!($key instanceof Stringable)) {
+                throw new GenericException('Invalid array key, object is not stringable');
+            }
+
+            return $key->__toString();
+        }
+        throw new GenericException('Invalid array key');
     }
 
     /**
@@ -267,7 +280,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function get(mixed $searchedKey, mixed $defaultValue = null): mixed
     {
         foreach ($this->tuples as [$key, $value]) {
-            if ($key === $searchedKey) {
+            if ($this->convertToKey($key) === $this->convertToKey($searchedKey)) {
                 return $value;
             }
         }
@@ -281,7 +294,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function offsetExists(mixed $offset): bool
     {
         foreach ($this->tuples as [$key, $value]) {
-            if ($key === $offset) {
+            if ($this->convertToKey($key) === $this->convertToKey($offset)) {
                 return true;
             }
         }
@@ -297,7 +310,7 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
     public function offsetGet(mixed $offset): mixed
     {
         foreach ($this->tuples as [$key, $value]) {
-            if ($key === $offset) {
+            if ($this->convertToKey($key) === $this->convertToKey($offset)) {
                 return $value;
             }
         }
