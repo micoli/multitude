@@ -13,6 +13,8 @@ use Micoli\Multitude\Map\ImmutableMap;
 use Micoli\Multitude\Map\MutableMap;
 use Micoli\Multitude\Tests\Fixtures\Baz;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Rfc4122\UuidV4;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * @internal
@@ -529,5 +531,25 @@ class MapTest extends TestCase
 
         self::assertSame(['a' => 1, 'c' => 3], $map->valueIntersect($compared)->toArray());
         self::assertSame($map->toArray(), $map->valueIntersect($map)->toArray());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideMapClass
+     *
+     * @param class-string<AbstractMap<UuidInterface|string, mixed>> $className
+     */
+    public function it_should_get_values_on_stringable_object(string $className): void
+    {
+        $id1 = UuidV4::uuid4();
+        $id2 = UuidV4::uuid4();
+        $id3 = UuidV4::uuid4();
+        /** @var AbstractMap<UuidInterface|string, int|string> $map */
+        $map = new $className([[$id1, 1], [$id2, 2], [$id3, 3]]);
+        self::assertSame([$id1->toString() => 1, $id2->toString() => 2, $id3->toString() => 3], $map->toArray());
+        self::assertSame(1, $map->get($id1->toString()));
+        self::assertSame(1, $map->get($id1));
+        self::assertSame('not_found', $map->get(UuidV4::uuid4(), 'not_found'));
     }
 }
