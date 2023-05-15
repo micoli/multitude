@@ -279,8 +279,9 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function get(mixed $searchedKey, mixed $defaultValue = null): mixed
     {
+        $convertedSearchToKey = $this->convertToKey($searchedKey);
         foreach ($this->tuples as [$key, $value]) {
-            if ($this->convertToKey($key) === $this->convertToKey($searchedKey)) {
+            if ($this->convertToKey($key) === $convertedSearchToKey) {
                 return $value;
             }
         }
@@ -293,8 +294,9 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function offsetExists(mixed $offset): bool
     {
+        $convertedOffset = $this->convertToKey($offset);
         foreach ($this->tuples as [$key, $value]) {
-            if ($this->convertToKey($key) === $this->convertToKey($offset)) {
+            if ($this->convertToKey($key) === $convertedOffset) {
                 return true;
             }
         }
@@ -309,8 +311,9 @@ class AbstractMap extends AbstractMultitude implements Countable, IteratorAggreg
      */
     public function offsetGet(mixed $offset): mixed
     {
+        $convertedOffset = $this->convertToKey($offset);
         foreach ($this->tuples as [$key, $value]) {
-            if ($this->convertToKey($key) === $this->convertToKey($offset)) {
+            if ($this->convertToKey($key) === $convertedOffset) {
                 return $value;
             }
         }
